@@ -1,0 +1,211 @@
+<!-- <template>
+ <div class="Member-nav">
+   <router-link to="/">
+     <div class="Member-back">
+        <span class="iconfont ">&#xe602;</span>
+        {{MemberTitle.back}}
+     </div>
+   </router-link>
+   <div class="Member-collection">
+       <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+   </div>
+ </div>
+</template>
+<script>
+export default {
+  name: 'MemberHeader',
+  data () {
+    return {
+      MemberTitle: {
+        back: '返回',
+        title: '员工信息采集'
+      }
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+    overflow:hidden
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+</style>
+ -->
+ <template>
+<div>
+  <div class="Member-nav">
+   <router-link to="/">
+     <div class="Member-back">
+        <span class="iconfont ">&#xe602;</span>
+     </div>
+   </router-link>
+   <div class="Member-collection">
+       <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+   </div>
+   <div class="Member-refer" @click="user_submit">
+      <h4 class="Member-submit" >{{MemberTitle.refer}}</h4>
+   </div>
+ </div>
+</div>
+</template>
+<script>
+import { MessageBox } from 'mint-ui'
+
+export default {
+  name: 'UploadHeader',
+  data () {
+    return {
+      MemberTitle: {
+        back: '',
+        title: '员工信息采集',
+        refer: '提交'
+      }
+    }
+  },
+  methods: {
+    user_submit () {
+      // 家庭成员数据
+      let list = this.$store.state.family.FamilyList
+      // 父母同性 配偶同性 紧急联系人
+      let arrlist = []
+      // 非独生子女 同辈家庭成员
+      let brotherlist = []
+      // 紧急联系人
+      let crashlist = []
+      // 教育背景数据
+      let teachlength = this.$store.state.Teachbg.TeachbgdataList.length
+      // 家庭成员数据长度
+      let familylength = this.$store.state.family.FamilyList.length
+      // 是否独生子女
+      let userone = this.$store.state.usermsglist.msgdatalist[0].Only_child
+      if (!this.$store.state.usermsglist.msgdatalist[0].MsgState) {
+        MessageBox('提交信息失败', '请保存基本信息')
+        return
+      }
+      if (teachlength === 0) {
+        MessageBox('提交信息失败', '请保存教育背景')
+        return
+      }
+      if (familylength === 0) {
+        MessageBox('提交信息失败', '请保存家庭成员信息')
+        return
+      }
+      list.forEach(function (item) {
+        if (item.relation === '父/母') {
+          arrlist.push(item.sex)
+        }
+      })
+      if (arrlist.length !== 0) {
+        let s = arrlist.join(',') + ','
+        for (var i = 0; i < arrlist.length; i++) {
+          if (s.replace(arrlist[i] + ',', '').indexOf(arrlist[i] + ',') > -1) {
+            MessageBox('提交信息失败', '父母性别不能相同')
+            return
+          }
+        }
+      }
+      list.forEach(function (item) {
+        if (item.relation === '兄/嫂' && item.sex === '男') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '弟/弟媳' && item.sex === '男') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '姐/姐夫' && item.sex === '女') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '妹/妹夫' && item.sex === '女') {
+          brotherlist.push(item.name)
+        }
+      })
+      if (userone === '否') {
+        if (brotherlist.length === 0) {
+          MessageBox('提交信息失败', '家庭成员必须填写一名兄、弟、姐、妹')
+          return false
+        }
+      } else if (userone === '是') {
+        if (brotherlist.length !== 0) {
+          MessageBox('提交信息失败', '您是独生子女,家庭成员信息错误')
+          return false
+        }
+      }
+      list.forEach(function (item) {
+        if (item.ContactPhone !== '') {
+          crashlist.push(item.ContactPhone)
+        }
+      })
+      if (crashlist.length === 0) {
+        MessageBox('提交信息失败', '家庭成员必须有一名紧急联系人')
+        return false
+      }
+      MessageBox('提交信息成功', '个人资料信息提交成功')
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+   .Member-refer
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-submit
+      font-weight:400
+      font-size:.4rem
+      color:#CC3300
+      text-align:center
+.Stuff-Id
+  box-sizing:box-sizing
+  padding-left:.4rem
+  padding-right:.4rem
+  .stuff-idht
+    height:.4rem
+    line-height:.4rem
+</style>

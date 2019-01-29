@@ -1,0 +1,51 @@
+<template>
+ <div>
+ <member-header></member-header>
+ <!-- <member-basic></member-basic> -->
+ <member-menu></member-menu>
+<!--  <button @click="getCityjson">点击</button>
+ <button @click="Cityjsonshow">转换格式</button> -->
+ </div>
+</template>
+<script>
+import MemberHeader from './components/Header'
+import MemberBasic from './components/BasicMsg'
+import MemberMenu from './components/BasicMenu'
+
+export default {
+  name: 'Member',
+  data () {
+    return {
+      arealist: []
+    }
+  },
+  components: {
+    MemberHeader,
+    MemberBasic,
+    MemberMenu
+  },
+  methods: {
+    getCityjson () {
+      this.axios.post('http://1.180.3.61:8766/PSIGW/RESTListeningConnector/PSFT_HR/LOCATION.v1/', {
+        TOKEN: 'hrssc.yili.com'
+      })
+        .then(function (response) {
+          console.log(response)
+          // console.log(response.data.status)
+          window.localStorage.setItem('CityList', JSON.stringify(response.data))
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    Cityjsonshow () {
+      let city = JSON.parse(localStorage.CityList)
+      console.log(city.provinceList[0].id)
+    }
+  }
+}
+</script>
+
+<style>
+
+</style>

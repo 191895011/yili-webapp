@@ -1,0 +1,279 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+Vue.use(Vuex)
+// 这里定义初始值
+let state = {
+  count: 0,
+  ContainerName: '中国',
+  usersex: '男',
+  userone: '是',
+  keepmsg: false
+}
+
+const mutations = {
+  add (context) {
+    context.count++
+  },
+  decrease (context) {
+    context.count--
+  },
+  increment (context, name) {
+    context.ContainerName = name
+  },
+  wrtsex (context, sex) {
+    context.usersex = sex
+  },
+  wrtuserone (context, one) {
+    context.userone = one
+  },
+  wrtkeepmsg (context, msg) {
+    context.keepmsg = msg
+  }
+}
+
+// 事件触发后的逻辑操作
+// 参数为事件函数
+const actions = {
+  add (add) {
+    add.commit('add')
+  },
+  decrease (decrease) {
+    decrease.commit('decrease')
+  },
+  oddAdd ({commit, state}) {
+    if (state.count % 2 === 0) {
+      commit('add')
+    }
+  }
+}
+
+// 返回改变后的数值
+const getters = {
+  count (context) {
+    return context.count
+  },
+  getOdd (context) {
+    return context.count % 2 === 0 ? '偶数' : '奇数'
+  }
+}
+
+const moduleA = {
+  state: {
+    HealthList: []
+  },
+  mutations: {
+    HealthAddMsg (context, msg) {
+      context.HealthList.push(msg)
+    },
+    HealthRemoveMsg (context, id) {
+      for (let i = 0; i < context.HealthList.length; i++) {
+        if (id === context.HealthList[i].id) {
+          context.HealthList.splice(i, 1)
+        }
+      }
+    },
+    HealthWriteMsg (context, msg) {
+      context.HealthList.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.starttime = msg.starttime
+          item.endtime = msg.endtime
+          item.unit = msg.unit
+          item.marker = msg.marker
+        }
+      })
+    }
+  }
+}
+
+const moduleB = {
+  state: {
+    FamilyList: []
+  },
+  mutations: {
+    FamilyAddMsg (context, msg) {
+      context.FamilyList.push(msg)
+    },
+    FamilyRemoveMsg (context, id) {
+      for (let i = 0; i < context.FamilyList.length; i++) {
+        if (id === context.FamilyList[i].id) {
+          context.FamilyList.splice(i, 1)
+        }
+      }
+    },
+    FamilyWriteMsg (context, msg) {
+      context.FamilyList.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.relation = msg.relation
+          item.name = msg.name
+          item.sex = msg.sex
+          item.BirthdayDate = msg.BirthdayDate
+          item.ContactPhone = msg.ContactPhone
+          item.unit = msg.unit
+          item.Identity = msg.Identity
+          item.address = msg.address
+          item.inaddress = msg.inaddress
+          item.urgent = msg.urgent
+          item.yilijob = msg.yilijob
+          item.StaffID = msg.StaffID
+          item.spousejob = msg.spousejob
+        }
+      })
+    }
+  }
+}
+
+const moduleC = {
+  state: {
+    languagedatalist: []
+  },
+  mutations: {
+    languageAddMsg (context, msg) {
+      context.languagedatalist.push(msg)
+    },
+    languageRemoveMsg (context, id) {
+      for (let i = 0; i < context.languagedatalist.length; i++) {
+        if (id === context.languagedatalist[i].id) {
+          context.languagedatalist.splice(i, 1)
+        }
+      }
+    },
+    languageWriteMsg (context, msg) {
+      context.languagedatalist.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.language = msg.language
+          item.level = msg.level
+          item.date = msg.date
+          item.Grade = msg.Grade
+          item.skilled = msg.skilled
+        }
+      })
+    }
+  }
+}
+
+const moduleD = {
+  state: {
+    TeachbgdataList: []
+  },
+  mutations: {
+    TeachbgAddMsg (context, msg) {
+      context.TeachbgdataList.push(msg)
+    },
+    TeachbgRemoveMsg (context, id) {
+      for (let i = 0; i < context.TeachbgdataList.length; i++) {
+        if (id === context.TeachbgdataList[i].id) {
+          context.TeachbgdataList.splice(i, 1)
+        }
+      }
+    },
+    TeachbgWriteMsg (context, msg) {
+      context.TeachbgdataList.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.starttime = msg.StartTime
+          item.endtime = msg.EndTime
+          item.unit = msg.unit
+          item.unitType = msg.unitType
+          item.education = msg.education
+          item.ProfessionType = msg.ProfessionType
+          item.Profession = msg.Profession
+          item.TeachModus = msg.TeachModus
+          item.CertificateNumber = msg.CertificateNumber
+          item.DegreeNumber = msg.DegreeNumber
+          item.Remarks = msg.Remarks
+        }
+      })
+    }
+  }
+}
+
+const moduleE = {
+  state: {
+    jobdataList: []
+  },
+  mutations: {
+    jobAddMsg (context, msg) {
+      context.jobdataList.push(msg)
+    },
+    jobRemoveMsg (context, id) {
+      for (let i = 0; i < context.jobdataList.length; i++) {
+        if (id === context.jobdataList[i].id) {
+          context.jobdataList.splice(i, 1)
+        }
+      }
+    },
+    jobWriteMsg (context, msg) {
+      context.jobdataList.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.StartTime = msg.StartTime
+          item.EndTime = msg.EndTime
+          item.unit = msg.unit
+          item.office = msg.office
+          item.witness = msg.witness
+          item.witness_phone = msg.witness_phone
+          item.Remarks = msg.Remarks
+        }
+      })
+    }
+  }
+}
+
+const moduleF = {
+  state: {
+    yilijobdatalist: []
+  },
+  mutations: {
+    yiliAddMsg (context, msg) {
+      context.yilijobdatalist.push(msg)
+    },
+    yilihRemoveMsg (context, id) {
+      for (let i = 0; i < context.yilijobdatalist.length; i++) {
+        if (id === context.yilijobdatalist[i].id) {
+          context.yilijobdatalist.splice(i, 1)
+        }
+      }
+    },
+    yiliWriteMsg (context, msg) {
+      context.yilijobdatalist.forEach(function (item, index) {
+        if (msg.id === item.id) {
+          item.name = msg.name
+          item.relation = msg.relation
+          item.phone = msg.phone
+          item.unit = msg.unit
+          item.office = msg.office
+        }
+      })
+    }
+  }
+}
+
+const moduleG = {
+  state: {
+    msgdatalist: [{
+      Name: '',
+      ContainerName: '',
+      ID: ''
+    }]
+  },
+  mutations: {
+    yiliAddMsg (context, msg) {
+      context.msgdatalist = []
+      context.msgdatalist.push(msg)
+    }
+  }
+}
+
+export default new Vuex.Store({
+  state,
+  mutations,
+  actions,
+  getters,
+  modules: {
+    health: moduleA,
+    family: moduleB,
+    language: moduleC,
+    Teachbg: moduleD,
+    jobskill: moduleE,
+    yilijobdatalist: moduleF,
+    usermsglist: moduleG
+  }
+})

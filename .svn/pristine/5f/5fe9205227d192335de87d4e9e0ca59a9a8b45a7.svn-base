@@ -1,0 +1,430 @@
+<template>
+ <div>
+   <home-header></home-header>
+   <home-icon></home-icon>
+   <home-staff  v-show="Incumbent"></home-staff>
+   <home-entry  v-show="!Incumbent" :datamsg = "DataMsg"></home-entry>
+ </div>
+</template>
+<script>
+import HomeHeader from './components/Header'
+import HomeIcon from './components/Imgicon'
+import HomeStaff from './components/Staff'
+import HomeEntry from './components/Entry'
+import { MessageBox } from 'mint-ui'
+import ValueList from '@/assets/js/valuelist'
+import global_ from '@/pages/Global/global'
+
+export default {
+  name: 'Home',
+  components: {
+    HomeHeader,
+    HomeIcon,
+    HomeStaff,
+    HomeEntry
+  },
+  data () {
+    return {
+      Incumbent: true,
+      DataMsg: ''
+    }
+  },
+  created () {
+    // const GetRequest = global_.GetRequest
+    // console.log(GetRequest)
+    let url = window.location.href
+    console.log('创建首页地址' + url)
+    // const UserType = this.$route.query.hire_class
+    // console.log('首页用户类型' + UserType)
+    // const type = this.$route.query.type
+    // console.log('进展程度' + type)
+    // const hireId = this.$route.query.hireId
+    // console.log('用户ID' + hireId)
+    // const UserType = 'A'
+    // this.userType(GetRequest())
+  },
+  methods: {
+    // 获取省市区数据
+    getCityjson () {
+      let that = this
+      const GetRequest = global_.GetRequest
+      this.axios.post('http://1.180.3.61:8766/PSIGW/RESTListeningConnector/PSFT_HR/LOCATION.v1/', {
+        TOKEN: 'hrssc.yili.com'
+      })
+        .then(function (response) {
+          console.log(response)
+          // console.log(response.data.provinceList)
+          window.localStorage.setItem('CityList', JSON.stringify(response.data))
+          let citymsg = response.data.provinceList
+          console.log('地区数据')
+          console.log(citymsg)
+          that.$store.commit('Citykeep', citymsg)
+          that.userType(GetRequest())
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 登录获取页面信息
+    getUserJson (urlarr) {
+      // console.log(urlarr.type) // 判断 是否第一次填写
+      // console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post('http://1.180.3.61:8766/PSIGW/RESTListeningConnector/PSFT_HR/CompleteStatus.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: 'OTAwMDAwMDI=',
+        'type': '1'
+      })
+        .then(function (response) {
+          console.log(response)
+          console.log('状态码' + response.data.status)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.UserJsonSuccess(response.data)
+          } else {
+            that.UserJsonError(response.data.msg)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 获取附件信息
+    getUserAnnexJson (urlarr) {
+      // console.log(urlarr.type) // 判断 是否第一次填写
+      // console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post('http://1.180.3.61:8766/PSIGW/RESTListeningConnector/PSFT_HR/GetAttachItems.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: 'OTAwMDAwMDI=',
+        'type': '1'
+      })
+        .then(function (response) {
+          console.log(response)
+          console.log('附件状态码' + response.data.status)
+          console.log(response.data.JsonData)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.EntryJsonSuccess(response.data.JsonData)
+          } else {
+            that.EntryJsonError(response.data.msg)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 判断A类 B类 是否第一次填写
+    userType (urlarr) {
+      console.log(urlarr)
+      // console.log(urlarr.type) // 判断 是否第一次填写
+      // console.log(urlarr.hireId) // 用户ID
+      if (urlarr.type === 1) {
+
+      } else if (urlarr.type === 2) {
+
+      }
+      if (urlarr.hire_class === 'A') {
+        console.log('A类')
+        this.$store.commit('TYPEAkeep', true)
+      } else if (urlarr.hire_class === 'B') {
+        console.log('B类')
+        this.$store.commit('TYPEAkeep', false)
+      }
+      this.getUserJson(urlarr)
+      this.getUserAnnexJson(urlarr)
+    },
+    // 查看数据库信息 修改个人信息
+    UserJsonSuccess (data) {
+      let ArrData = data.JsonData
+      let AreaListData = this.$store.state.CityList
+      let Name = ArrData.NAME // 名字
+      let usercountry // 国籍
+      let IDTypeJson = ValueList.GetIDTypeList(ArrData.NID_TYPE).name// 身份证类型 name
+      let userIdTypeCodeJson = ValueList.GetIDTypeList(ArrData.NID_TYPE).code// 身份证类型code
+      let userIdNumber = ArrData.NID // 证件号码
+      let userRace = ValueList.GetRaceList(ArrData.ETHNIC_GRP_CD).name // 民族
+      let userRacecode = ValueList.GetIDTypeList(ArrData.ETHNIC_GRP_CD).code // 民族code
+      let SexValueJson = ValueList.GetSexList(ArrData.SEX).name// 性别 name
+      let SexValueCodeJson = ValueList.GetSexList(ArrData.SEX).code// 性别code
+      let UserHomeTownJson = ArrData.JG_PROVINCE + '' + ArrData.JG_CITY + '' + ArrData.JG_AREA // 籍贯
+      let UserBornJson = ArrData.BIRTHDATE // 出生日期
+      let UserPoliticalJson = ValueList.GetPoliticalList(ArrData.POLITICAL_STA_CHN).name // 政治面貌 name
+      let UserPoliticalCodeJson = ValueList.GetPoliticalList(ArrData.POLITICAL_STA_CHN).code// 政治面貌 code
+      let UserHeightJson = ArrData.PERS_HEIGHT // 身高
+      let UserBloodJson = ValueList.GetBloodList(ArrData.BLOOD).name/// 血型 name
+      let UserBloodCodeJson = ValueList.GetBloodList(ArrData.BLOOD).code// 血型 code
+      let UserReligionJson = ValueList.GetReligionList(ArrData.RELIGION).name// 宗教信仰 name
+      let UserReligionCodeJson = ValueList.GetReligionList(ArrData.RELIGION).code // 宗教信仰 code
+      let UserSpecialtyJson = ArrData.SPECIALITY // 个人特长
+      let UserMarriageJson = ValueList.GetMarriageList(ArrData.MAR_STATUS).name// 婚姻状况 name
+      let UserMarriageCodeJson = ValueList.GetMarriageList(ArrData.MAR_STATUS).code// 婚姻状况 code
+      let UserAccountJson = ValueList.GetAccountList(ArrData.HUKOU_TYPE_CHN).name// 户口性质 name
+      let UserAccountCodeJson = ValueList.GetAccountList(ArrData.HUKOU_TYPE_CHN).code // 户口性质 code
+      let UserOnlyChildJson = ValueList.GetNoList(ArrData.C_BEAR).name // 独生子女name
+      let UserOnlyChildCodeJson = ValueList.GetNoList(ArrData.C_BEAR).code // 独生子女code
+      let UserBornPlaceJson = ArrData.BIRTH_PROVINCE + '' + ArrData.BIRTH_CITY + '' + ArrData.BIRTH_AREA // 出生地点
+      let userCensusJson = ArrData.HJ_PROVINCE + '' + ArrData.HJ_CITY + '' + ArrData.HJ_AREA // 户籍地址
+      let userCensusInputJson = ArrData.HJ_ADDRESS // 户籍地址详情
+      let userFamilyJson = ArrData.JT_PROVINCE + '' + ArrData.JT_CITY + '' + ArrData.JT_AREA // 家庭地址
+      let userFamilyInputJson = ArrData.JT_ADDRESS // 家庭住址详情
+      let userNowJson = ArrData.XZ_PROVINCE + '' + ArrData.XZ_CITY + '' + ArrData.XZ_AREA // 现地址
+      let userNowInputJson = ArrData.XZ_ADDRESS // 现地址详情
+
+      let UserHomeTownJsonArr = [] // 籍贯
+      UserHomeTownJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.JG_PROVINCE)
+      UserHomeTownJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.JG_PROVINCE, ArrData.JG_CITY)
+      UserHomeTownJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.JG_PROVINCE, ArrData.JG_CITY, ArrData.JG_AREA)
+      let UserBornPlaceJsonArr = [] // 出生地点数组
+      UserBornPlaceJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.BIRTH_PROVINCE)
+      UserBornPlaceJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.BIRTH_PROVINCE, ArrData.BIRTH_CITY)
+      UserBornPlaceJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.BIRTH_PROVINCE, ArrData.BIRTH_CITY, ArrData.BIRTH_AREA)
+      let userCensusJsonArr = [] // 户籍数组
+      userCensusJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.HJ_PROVINCE)
+      userCensusJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.HJ_PROVINCE, ArrData.HJ_CITY)
+      userCensusJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.HJ_PROVINCE, ArrData.HJ_CITY, ArrData.HJ_AREA)
+      let userFamilyJsonArr = [] // 家庭住址数组
+      userFamilyJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.JT_PROVINCE)
+      userFamilyJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.JT_PROVINCE, ArrData.JT_CITY)
+      userFamilyJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.JT_PROVINCE, ArrData.JT_CITY, ArrData.JT_AREA)
+      let userNowJsonArr = [] // 现住址
+      userNowJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.XZ_PROVINCE)
+      userNowJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.XZ_PROVINCE, ArrData.XZ_CITY)
+      userNowJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.XZ_PROVINCE, ArrData.XZ_CITY, ArrData.XZ_AREA)
+      // 国籍
+      if (ArrData.COUNTRY === 'CHN') {
+        usercountry = '中国'
+      }
+      // 赋值个人信息 数组对象
+      let msgjson = {
+        Name: Name,
+        ContainerName: usercountry,
+        IDType: IDTypeJson,
+        ID: userIdNumber,
+        SexValue: SexValueJson,
+        Race: userRace,
+        HomeTownPlace: UserHomeTownJson,
+        BornTime: UserBornJson,
+        Political: UserPoliticalJson,
+        Height: UserHeightJson,
+        Blood: UserBloodJson,
+        Religion: UserReligionJson,
+        Specialty: UserSpecialtyJson,
+        Marriage: UserMarriageJson,
+        Account: UserAccountJson,
+        Only_child: UserOnlyChildJson,
+        Birthplace: UserBornPlaceJson,
+        Accountplace: userCensusJson,
+        Accountplaceinput: userCensusInputJson,
+        FamilyPlace: userFamilyJson,
+        FamilyPlaceinput: userFamilyInputJson,
+        NowPlace: userNowJson,
+        NowPlaceinput: userNowInputJson,
+        MsgState: false,
+        user_IdTypeValuecode_set: userIdTypeCodeJson,
+        User_Racecode_set: userRacecode,
+        SexValuecode_set: SexValueCodeJson,
+        user_Politicalcode_set: UserPoliticalCodeJson,
+        user_Bloodcode_set: UserBloodCodeJson,
+        user_Religioncode_set: UserReligionCodeJson,
+        user_Marriagecode_set: UserMarriageCodeJson,
+        user_Accountcode_set: UserAccountCodeJson,
+        user_childcode_set: UserOnlyChildCodeJson,
+        HomeTownPlaceArr: UserHomeTownJsonArr,
+        BirthplaceArr: UserBornPlaceJsonArr,
+        AccountplaceArr: userCensusJsonArr,
+        FamilyPlaceArr: userFamilyJsonArr,
+        NowPlaceArr: userNowJsonArr
+      }
+      console.log(UserHomeTownJsonArr)
+      console.log(UserBornPlaceJsonArr)
+      console.log(userCensusJsonArr)
+      console.log(userFamilyJsonArr)
+      console.log(userNowJsonArr)
+      this.$store.commit('UserReplaceMsg', msgjson)
+      // 历史工作经历
+      this.GetDataToJob(ArrData.WORK_EXP)
+      // 教育背景
+      this.GetDataTeach(ArrData.EDUCATION)
+      // 外语水平
+      this.GetDataLang(ArrData.LANGUAGE)
+      // 家庭成员
+      this.GetDataFamily(ArrData.FAMILY)
+      // 健康信息
+      this.GetDataHealth(ArrData.HEALTH)
+      // 在伊利亲属关系
+      this.GetDataYiLi(ArrData.FAMINYILI)
+    },
+    GetDataToJob (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          StartTime: item.START_DT,
+          EndTime: item.END_DT,
+          unit: item.COMPANY,
+          office: item.POSITION,
+          witness: item.WITNESS,
+          witness_phone: item.PHONE,
+          Remarks: item.COMMENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('jobReplaceMsg', arr)
+    },
+    GetDataTeach (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let SchoolType = ValueList.GetSchoolType(item.GC_SCH_TYPE)
+        let EducationType = ValueList.GetEducation(item.CG_EDU_BCKG)
+        let ProfessionTypeList = ValueList.GetProfessionType(item.GC_MAJ_TYPE)
+        let TeachType = ValueList.GetTeachType(item.CG_EDU_TYPE)
+        let addmsg = {
+          id: index + 1,
+          StartTime: item.START_DT,
+          EndTime: item.END_DT,
+          unit: item.C_SCHOOL, // 学校名称
+          unitType: SchoolType.name, // 学校类型
+          education: EducationType.name, // 学历类型
+          ProfessionType: ProfessionTypeList.name, // 专业类别
+          Profession: item.C_MAJOR, // 专业
+          TeachModus: TeachType.name, // 教育形式
+          CertificateNumber: item.CG_EDU_BCKG_NO, // 学历证书编号
+          DegreeNumber: item.CG_DEGREE_NO, // 学位证书编号
+          Remarks: item.COMMENT, // 备注
+          SecDegree: '', // 是否第二学位
+          educationcode_set: EducationType.code,
+          unitTypecode_set: SchoolType.code,
+          TeachModuscode_set: TeachType.code,
+          ProfessionTypecode_set: ProfessionTypeList.code,
+          SecDegreecode_set: ''
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('TeachbgReplaceMsg', arr)
+    },
+    GetDataLang (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let lang = ValueList.GetLanguage(item.CG_LANGUAGE)
+        let level = ValueList.GetLangLevel(item.CG_LANGUAGE, item.GC_CERTIFICATE_LVL)
+        let skill = ValueList.GetSkill(item.GC_LANG_SKILEXP)
+        let addmsg = {
+          id: index + 1,
+          language: lang.name,
+          level: level.name,
+          date: item.UPDATE_DT,
+          Grade: item.GC_SCORE,
+          skilled: skill.name,
+          languagecode_set: lang.code,
+          levelcode_set: level.code,
+          skilledcode_set: skill.code
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('languageReplaceMsg', arr)
+    },
+    GetDataHealth (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          StartTime: item.GC_HEALTH_EFFDT,
+          EndTime: item.GC_HEALTH_ENDDT,
+          unit: item.COMPANY_DESCR,
+          marker: item.COMMENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('HealthReplaceMsg', arr)
+    },
+    GetDataYiLi (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          name: item.NAME,
+          relation: item.YL_RELATION,
+          phone: item.PHONE,
+          unit: item.GC_SCH_COM,
+          office: item.GC_POSN_IDENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('yiliReplaceMsg', arr)
+    },
+    GetDataFamily (data) {
+      let arr = []
+      let AreaListData = this.$store.state.CityList
+      data.forEach(function (item, index) {
+        let RelationType = ValueList.GetFamilylist(item.CG_RELATION_TYPE)
+        let SexType = ValueList.GetSexList(item.SEX)
+        let BooleanCrash = ValueList.GetNoList(item.CG_EMERG_CNTCT)
+        let Booleanyilijob = ValueList.GetNoList(item.CG_EMERG_CNTCT)
+        let cityDataArr = []
+        cityDataArr[0] = ValueList.getProvinceId(AreaListData, item.ADDR_PROVINCE)
+        cityDataArr[1] = ValueList.getProvinceId(AreaListData, item.ADDR_PROVINCE, item.ADDR_CITY)
+        cityDataArr[2] = ValueList.getProvinceId(AreaListData, item.ADDR_PROVINCE, item.ADDR_CITY, item.ADDR_AREA)
+
+        let addmsg = {
+          id: index + 1,
+          relation: RelationType.name,
+          name: item.NAME,
+          sex: SexType.name,
+          BirthdayDate: item.BIRTHDATE,
+          ContactPhone: item.PHONE, // 联系方式
+          unit: item.GC_SCH_COM, // 工作单位
+          Identity: item.GC_POSN_IDENT, // 职位/身份
+          address: item.ADDR_PROVINCE + '' + item.ADDR_CITY + '' + item.ADDR_AREA, // 省市区
+          inaddress: item.ADDR_ADDRESS, // 住址详情
+          urgent: BooleanCrash.name, // 是否紧急联系人
+          yilijob: Booleanyilijob.name, // 是否在伊利工作
+          StaffID: item.GC_FAMILYMEMBER_ID, // 员工ID
+          Remarks: item.COMMENT,
+          relationcode_set: RelationType.code,
+          sexcode_set: SexType.code,
+          crashcode_set: BooleanCrash.code,
+          yilijobcode_set: Booleanyilijob.code,
+          AddressArr: cityDataArr
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('FamilyReplaceMsg', arr)
+    },
+    // 禁止填写
+    UserJsonError (data) {
+      this.DataMsg = data
+      this.Incumbent = false
+      console.log('禁止填写')
+    },
+    // 入职材料补充
+    EntryJsonSuccess (data) {
+      let arrlist = []
+      data.forEach(function (item, index) {
+        let obj = {}
+        obj.FILELIST = item.FILELIST
+        obj.FILE_DESCR = item.FILE_DESCR
+        obj.FILE_ID = item.FILE_ID
+        obj.REQUIRED = item.REQUIRED
+        obj.REQUIREDText = (item.REQUIRED === 'Y') ? '请务必完善' : '若有，请上传'
+        obj.FeleSuc = (item.FILELIST[0].FILEPATH === '') ? '尚未上传' : '上传成功'
+        arrlist.push(obj)
+      })
+      this.$store.commit('entryReplaceList', arrlist)
+    },
+    EntryJsonError (msg) {
+      console.log('获取入职材料失败')
+    }
+  },
+  mounted () {
+    MessageBox('欢迎您进入《人员信息登记表》的填写阶段', '请您认真阅读后如实填写，如您对信息填写存在疑问，请查看“填写说明”（见页面右上方问号），我们会对您的信息进行严格保密，感谢您的理解与配合')
+    console.log('进入页面')
+    this.getCityjson()
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.mint-msgbox-content >>> .mint-msgbox-message
+ color: red !important
+</style>

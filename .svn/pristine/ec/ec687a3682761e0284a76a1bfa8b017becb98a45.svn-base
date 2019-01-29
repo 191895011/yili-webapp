@@ -1,0 +1,405 @@
+<template>
+<div class="upload-IDCard">
+    <div class="Member-nav">
+        <router-link to="/entry">
+        <div class="Member-back">
+            <span class="iconfont ">&#xe602;</span>
+        </div>
+        </router-link>
+        <div class="Member-collection">
+            <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+        </div>
+        <div class="Member-refer" @click="keepPostdata" >
+            <h4 class="Member-submit">{{MemberTitle.refer}}</h4>
+        </div>
+    </div>
+    <div class="Stuff-Id">
+        <p class="stuff-idht">{{MemberTitle.idtitle}}</p>
+        <div class="upload-img" style="width:100%;text-align: center;">
+				<el-upload
+					ref="picker"
+					action="http://1.180.3.61:8766//PSIGW/RESTListeningConnector/PSFT_HR/FILEUPLOAD.v1/"
+                    :file-list="fileList2"
+					list-type="picture-card"
+					accept="image/JPEG,image/PNG,image/JPG"
+					:http-request="httpRequest"
+					:show-file-list="true"
+					:auto-upload="true"
+                    :limit="1"
+                    :on-exceed="handleExceed"
+					:on-preview="handlePictureCardPreview"
+					:on-remove="handleRemove"
+					:before-upload="beforeAvatarUpload">
+					<i class="el-icon-plus"></i>
+				</el-upload>
+        </div>
+    </div>
+</div>
+</template>
+<script>
+import { MessageBox } from 'mint-ui'
+export default {
+  name: 'IDCardPhone',
+  data () {
+    return {
+      MemberTitle: {
+        back: '',
+        title: '身份证上传',
+        refer: '保存',
+        idtitle: '点击后可进行删除操作',
+        dataDescr: ''
+      },
+	  filedata:[],
+      fileList2: [],
+      localhostImg: false,
+      localhostImgData: {}
+    }
+  },
+  methods: {
+    httpRequest (options) {
+				var that = this;
+                const ID = that.$route.query.name
+				// 获取文件对象
+				let file = options.file
+                console.log(file)
+                that.localhostImgData.Data = file
+                that.localhostImgData.ID = ID
+                console.log(that.localhostImgData)
+				//判断图片类型
+				if (file.type == 'image/jpeg' || file.type == 'image/png' || file.type == 'image/JPG') {
+					var isJPG = true
+				} else {
+					isJPG = false
+				}
+				// 判断图片大小
+				const isLt2M = file.size / 1024 / 1024 < 10
+				if (!isLt2M) {
+					this.$message.error('上传产品图片不能超过10M!')
+				}
+
+				// 创建一个HTML5的FileReader对象
+				var reader = new FileReader();
+				//创建一个img对象
+				var img = new Image();
+				let filename = options.filename
+				if (file) {
+					reader.readAsDataURL(file)
+				}
+				if (isJPG && isLt2M) {
+					reader.onload = (e) => {
+						let base64Str = reader.result.split(',')[1]
+						img.src = e.target.result
+						// base64地址图片加载完毕后执行
+						img.onload = function() {
+							// 缩放图片需要的canvas（也可以在DOM中直接定义canvas标签，这样就能把压缩完的图片不转base64也能直接显示出来）
+							var canvas = document.createElement('canvas');
+							var context = canvas.getContext('2d');
+							// 图片原始尺寸
+							var originWidth = this.width;
+							var originHeight = this.height;
+							// 最大尺寸限制，可通过设置宽高来实现图片压缩程度
+							var maxWidth = 800,
+								maxHeight = 800;
+							// 目标尺寸
+							var targetWidth = originWidth,
+								targetHeight = originHeight;
+							// 图片尺寸超过最大尺寸的限制
+							if (originWidth > maxWidth || originHeight > maxHeight) {
+								if (originWidth / originHeight > maxWidth / maxHeight) {
+									// 更改宽度，按照宽度限定尺寸
+									targetWidth = maxWidth;
+									targetHeight = Math.round(maxWidth * (originHeight / originWidth));
+								} else {
+									targetHeight = maxHeight;
+									targetWidth = Math.round(maxHeight * (originWidth / originHeight));
+								}
+							}
+							//对图片进行缩放
+							canvas.width = targetWidth;
+							canvas.height = targetHeight;
+							// 清除画布
+							context.clearRect(0, 0, targetWidth, targetHeight);
+							// 图片压缩
+							context.drawImage(img, 0, 0, targetWidth, targetHeight);
+							/*第一个参数是创建的img对象；第二三个参数是左上角坐标，后面两个是画布区域宽高*/
+							//压缩后的base64文件
+							var newUrl = canvas.toDataURL('image/jpeg', 0.92);
+							// console.log(newUrl);
+
+							// this.dialogImageUrl = newUrl;
+
+							//获取base64图片大小，返回MB数字
+							var str = newUrl.replace('data:image/png;base64,', '');
+							var equalIndex = str.indexOf('=');
+							if (str.indexOf('=') > 0) {
+								str = str.substring(0, equalIndex);
+							}
+							var strLength = str.length;
+							var fileLength = parseInt(strLength - (strLength / 8) * 2);
+							// 由字节转换为MB
+							var size = "";
+							size = (fileLength / (1024 * 1024)).toFixed(2);
+                            console.log('大小' + fileLength)
+							var sizeStr = size + ""; //转成字符串
+							var index = sizeStr.indexOf("."); //获取小数点处的索引
+							var dou = sizeStr.substr(index + 1, 2) //获取小数点后两位的值
+							if (dou == "00") { //判断后两位是否为00，如果是则删除00                
+								return sizeStr.substring(0, index) + sizeStr.substr(index + 3, 2)
+							}
+							console.log(size);
+							var arr2 = {
+								"FILENAME": options.file.name,
+                                "FILEID": ID,
+                                "DESCR": that.MemberTitle.dataDescr,
+								"BASE64STRING": newUrl.split(',')[1]
+							}
+                            console.log(arr2)
+							that.filedata.push(arr2);
+						}
+					}
+				}
+
+			},
+      beforeAvatarUpload(file) {
+				const isJPG = file.type === 'image/jpeg' || 'image/jpg' || 'image/png';
+				const isLt2M = file.size / 1024 / 1024 < 10;
+
+				if (!isJPG) {
+					this.$message.error('上传图片只能是 JPG/PNG/JPEG 格式!');
+				}
+				if (!isLt2M) {
+					this.$message.error('上传图片大小不能超过 10MB!');
+				}
+				return isJPG && isLt2M;
+			},
+      handleRemove(file, fileList) {
+       console.log(file)
+       console.log(fileList)
+      },
+      handlePictureCardPreview(file) {     
+			
+      },
+  	  handleAvatarSuccess(res, file) {//图片上传成功
+
+      },
+      handleExceed (files, fileList) {
+        this.$messagebox.alert(`只能上传一个文件`)
+      },
+      keepPostdata () {
+				if (this.filedata.length > 0) {
+                    // 如果图片是服务器返回的图片，怎么处理
+                    let ProgressArr = this.$store.state.entry.ProgressArr //进展程度
+                    let FILEDATA = this.$store.state.entry.FILEDATA // 附件数据
+                    let that = this
+                    const ID = this.$route.query.name
+                    let AddBoolean = false
+                    let FILEIDIndex
+                    ProgressArr.forEach(function (item) {
+                       if (item === ID) {
+                         AddBoolean = true
+                       }
+                    })
+                    // 附件数据对比,去重
+                     FILEDATA.forEach(function (item, index) {
+                        if (item.FILEID === that.filedata[0].FILEID) {
+                           FILEIDIndex = index
+                           console.log('找到下标' + FILEIDIndex)
+                        }
+                     })
+                    // 进度条
+                    if (!AddBoolean) {
+                       this.$store.commit('EntryProgressPush', ID)
+                       console.log('新的文件')
+                    } else {
+                      console.log('重复了')
+                    }
+                    this.FileDataToVuex(FILEIDIndex, this.filedata[0])
+                    console.log('保存')
+                    MessageBox('信息正确', '保存成功')
+                    this.$router.push({
+                        path: `/entry`
+                      })
+                     return
+						const loadingInstance1 = this.$loading({ body: true,text:"正在上传中",spinner:"el-icon-loading",background:"rgba(0, 0, 0, 0.8)" });
+						this.$refs.picker.submit();
+						var params = {
+							"EOAWPRCS_ID": "YL_SSC_AWE_TER",
+							"OPRID": "00181980",
+							"TOKEN": "hrssc.yili.com",
+							"TRANSACTION_NBR": "10270387",
+							"FILEDATA": this.filedata
+						};
+						this.axios.post('http://1.180.3.61:8766//PSIGW/RESTListeningConnector/PSFT_HR/FILEUPLOAD.v1/', {
+								data: params,
+							})
+							.then(res => {
+								if(res.data.status){
+									this.$message({
+										message:"上传成功",
+										type: 'success',
+										center:true
+									});
+									loadingInstance1.close();
+									if(this.$route.query.isSuc){
+										this.$route.query.isSuc.push('004');
+										this.$router.push({name:'Entry',params:{isSuc:this.$route.query.isSuc}});
+									}	
+								}
+							})
+							.catch(error => {
+								console.log(error)
+							})				
+					
+				}else{
+                    if (this.fileList2.length >0) {
+                      this.$messagebox.alert('此附件已上传,无需再次保存！')
+                    } else {
+                       this.$messagebox.alert('请先上传附件后再做保存！') 
+                    }
+				}
+      },
+      FileDataToVuex (FILEIDIndex, data) {
+         // 保存本地信息
+          this.$store.commit('localImgPush', this.localhostImgData)                 
+       
+        if (FILEIDIndex || FILEIDIndex === 0) {
+            console.log('重新替换附件')
+             this.$store.commit('FILEDATAReplace', data, FILEIDIndex)
+         } else {
+            console.log('新上的文件')
+            this.$store.commit('FILEDATAPush', data)
+        }
+      },
+      getObjectURL (file) {
+            var url = null ;
+            if (window.createObjectURL!=undefined) { // basic
+                url = window.createObjectURL(file);
+            } else if (window.URL!=undefined) { // mozilla(firefox)
+                url = window.URL.createObjectURL(file);
+            } else if (window.webkitURL!=undefined) { // webkit or chrome
+                url = window.webkitURL.createObjectURL(file);
+            }
+            return url 
+      }
+	},
+    mounted () {
+        const ID = this.$route.query.name
+        this.filedata = []
+        let that = this
+        console.log('进入附件页面')
+        let arr = this.$store.state.entry.entrydatalist
+        let localList = this.$store.state.entry.LocalImgList
+        let uploadarr = []
+        // 查找本地数据
+        localList.forEach(function (item, index) {
+            if (item.ID === ID) {
+                console.log('开始')
+               that.localhostImg = index
+            }
+        })
+        if (that.localhostImg) {
+            let data = localList[that.localhostImg].Data
+            let localurl = that.getObjectURL(data)
+            console.log(data.name)
+            let obj = {}
+            obj.name = data.name
+            obj.url = localurl
+            that.fileList2.push(obj)
+        }
+        arr.forEach(function (item, index) {
+            if (item.FILE_ID === ID) {
+                that.MemberTitle.title = item.FILE_DESCR + '上传'
+                that.MemberTitle.dataDescr = item.FILE_DESCR
+                uploadarr = item
+                if (!that.localhostImg) {
+                   if (item.FILELIST[0].FILEPATH !== '') {
+                    // that.fileList2.name = item.FILELIST[0].ATTACHUSERFILE
+                    // that.fileList2.url = item.FILELIST[0].FILEPATH
+                    console.log('赋值')
+                    let obj = {}
+                    obj.name = item.FILELIST[0].ATTACHUSERFILE
+                    obj.url = item.FILELIST[0].FILEPATH
+                    that.fileList2.push(obj)
+                  }
+                }
+            }
+        })
+    }
+}
+</script>
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+   .Member-refer
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-submit
+      font-weight:400
+      font-size:.4rem
+      color:#CC3300
+      text-align:center
+.Stuff-Id
+  box-sizing:box-sizing
+  padding-left:.4rem
+  padding-right:.4rem
+  font-size:14px
+  .stuff-idht
+    line-height:.5rem 
+    padding-bottom:.3rem
+    text-align:center
+    
+</style>
+<style type="text/css">
+		.upload-IDCard .Member-nav{
+			position: fixed;
+			top: 0px;
+			left: 0px;
+			right: 0px;
+			z-index: 999;
+			background-color: #FFFFFF;
+		}
+		.Stuff-Id {
+			position: relative;
+			top: 1.2rem;
+		}
+		
+		.el-upload--picture-card {
+			width: 5rem;
+			height: auto;
+		}
+		
+		.el-upload-list--picture-card .el-upload-list__item {
+			width: 5rem;
+			height: auto;
+		}
+		
+  	.el-icon-zoom-in{
+  		display: none;
+  	}
+</style>

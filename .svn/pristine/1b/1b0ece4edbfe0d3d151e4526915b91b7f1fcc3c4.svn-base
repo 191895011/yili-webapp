@@ -1,0 +1,447 @@
+<template>
+<div>
+   <div class="Member-nav">
+     <router-link to="/member">
+       <div class="Member-back">
+          <span class="iconfont ">&#xe602;</span>
+          {{MemberTitle.back}}
+       </div>
+     </router-link>
+     <div class="Member-collection">
+         <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+     </div>
+     <div class="member-rightdel">
+         <el-button type="primary" icon="el-icon-delete" circle  @click="Job_remove"></el-button>
+         <!-- <el-button type="danger" icon="el-icon-delete"  circle></el-button> -->
+         <!-- <el-button type="primary" icon="el-icon-delete"></el-button> -->
+     </div>
+   </div>
+   <ul class="job_ul">
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.StartTimeAcitve }">
+        <i class="Requiredcolor">*</i>开始时间
+       </div>
+       <div class="job_right"  @click="setDate">
+          {{JobData.StartTime}}
+          <span class="iconfont job_time">&#xe644;</span>
+       </div>
+     </li>
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.EndTimeAcitve }">
+         <i class="Requiredcolor">*</i>结束时间
+       </div>
+       <div class="job_right "  @click="setDate2">
+          {{JobData.EndTime}}
+          <span class="iconfont job_time">&#xe644;</span>
+       </div>
+     </li>
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.JobUnitAcitve }">
+        <i class="Requiredcolor">*</i>原单位
+       </div>
+       <div class="job_right">
+           <input type="text" placeholder="请在此处输入"  v-model="JobData.JobUnit"  />
+       </div>
+     </li>
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.JobOfficeAcitve }">
+        <i class="Requiredcolor">*</i>职位
+       </div>
+       <div class="job_right">
+           <input type="text" placeholder="请在此处输入" v-model="JobData.JobOffice"/>
+       </div>
+     </li>
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.JobWitnessAcitve}">
+         证明人
+       </div>
+       <div class="job_right">
+           <input type="text"
+             placeholder="请在此处输入"
+             v-model="JobData.JobWitness"
+             onkeypress='return( /[^\d]/.test(String.fromCharCode(event.keyCode)))'/>
+       </div>
+     </li>
+     <li class="job_li border-bottom">
+       <div class="job_left" :class="{ color_error: JobData.JobWitnessPhoneAcitve}">
+         联系电话
+       </div>
+       <div class="job_right">
+           <input type="number" placeholder="请在此处输入"
+           onkeypress='return( /[\d]/.test(String.fromCharCode(event.keyCode)))'
+           onkeyup="this.value = this.value.replace(/[^\d]/g, '')"
+           v-model="JobData.JobWitnessPhone"/>
+       </div>
+     </li>
+   </ul>
+   <p class="job_title">备注</p>
+   <textarea class="job_memark" placeholder="请在此处输入" v-model="JobData.JobRemarks"></textarea>
+   <div class="job_keep" v-show="isOriginHei">
+      <mt-button type="primary" size="normal" class="job_btn" @click="Job_keep">保存</mt-button>
+      <!-- <mt-button type="danger" size="normal"  class="job_btn job_delete" @click="Job_remove">删除</mt-button> -->
+   </div>
+ </div>
+</template>
+<script>
+import { MessageBox } from 'mint-ui'
+import global_ from '@/pages/Global/global'
+
+export default {
+  name: 'Jobdata',
+  data () {
+    return {
+      MemberTitle: {
+        back: '返回',
+        title: '历史工作经历'
+      },
+      JobData: {
+        StartTime: '请选择时间',
+        StartTimeAcitve: false,
+        EndTime: '请选择时间',
+        EndTimeAcitve: false,
+        JobUnit: '',
+        JobUnitAcitve: false,
+        JobOffice: '',
+        JobOfficeAcitve: false,
+        JobWitness: '',
+        JobWitnessAcitve: false,
+        JobWitnessPhone: '',
+        JobWitnessPhoneAcitve: false,
+        JobRemarks: ''
+      },
+      isOriginHei: true,
+      screenHeight: document.documentElement.clientHeight,
+      originHeight: document.documentElement.clientHeight
+    }
+  },
+  methods: {
+    setDate () {
+      this.$picker.show({
+        type: 'datePicker',
+        endTime: '2280-02-11',
+        startTime: '1900-01-01',
+        onOk: (date) => {
+          this.JobData.StartTime = date
+        }
+      })
+    },
+    setDate2 () {
+      this.$picker.show({
+        type: 'datePicker',
+        endTime: '2280-02-11',
+        startTime: '1900-01-01',
+        onOk: (e) => {
+          this.JobData.EndTime = e
+        }
+      })
+    },
+    Job_keep () {
+      // js not verification
+      // let jobdata = this.JobData
+      // const ID = this.$route.query.name
+      // if (ID === undefined) {
+      //   let listlength = this.$store.state.jobskill.jobdataList.length + 1
+      //   let addmsg = {
+      //     id: listlength,
+      //     StartTime: jobdata.StartTime,
+      //     EndTime: jobdata.EndTime,
+      //     unit: jobdata.JobUnit,
+      //     office: jobdata.JobOffice,
+      //     witness: jobdata.JobWitness,
+      //     witness_phone: jobdata.JobWitnessPhone,
+      //     Remarks: jobdata.JobRemarks
+      //   }
+      //   this.$store.commit('jobAddMsg', addmsg)
+      //   this.$router.push({
+      //     path: `/member`
+      //   })
+      // } else {
+      //   let writemsg = {
+      //     id: ID,
+      //     StartTime: jobdata.StartTime,
+      //     EndTime: jobdata.EndTime,
+      //     unit: jobdata.JobUnit,
+      //     office: jobdata.JobOffice,
+      //     witness: jobdata.JobWitness,
+      //     witness_phone: jobdata.JobWitnessPhone,
+      //     Remarks: jobdata.JobRemarks
+      //   }
+      //   this.$store.commit('jobWriteMsg', writemsg)
+      //   this.$router.push({
+      //     path: `/member`
+      //   })
+      // }
+      // MessageBox('信息正确', '信息保存成功')
+
+      let jobdata = this.JobData
+      const reg = global_.userPhone
+      reg.lastIndex = 0
+      const tellreg = global_.usertellPhone
+      tellreg.lastIndex = 0
+      const ID = this.$route.query.name
+      let msgActive = true
+      if (jobdata.StartTime === '请选择时间') {
+        jobdata.StartTimeAcitve = true
+        msgActive = false
+      } else if (jobdata.StartTime !== '') {
+        jobdata.StartTimeAcitve = false
+      }
+      if (jobdata.EndTime === '请选择时间') {
+        jobdata.EndTimeAcitve = true
+        msgActive = false
+      } else if (jobdata.EndTime !== '') {
+        jobdata.EndTimeAcitve = false
+      }
+      if (jobdata.StartTime > jobdata.EndTime) {
+        jobdata.StartTimeAcitve = true
+        jobdata.EndTimeAcitve = true
+        msgActive = false
+      } else if (jobdata.StartTime !== '请选择时间' && jobdata.EndTime !== '请选择时间') {
+        jobdata.StartTimeAcitve = false
+        jobdata.EndTimeAcitve = false
+      }
+      if (jobdata.JobUnit === '') {
+        jobdata.JobUnitAcitve = true
+        msgActive = false
+      } else {
+        jobdata.JobUnitAcitve = false
+      }
+      if (jobdata.JobOffice === '') {
+        jobdata.JobOfficeAcitve = true
+        msgActive = false
+      } else {
+        jobdata.JobOfficeAcitve = false
+      }
+      if (jobdata.JobWitnessPhone !== '' && jobdata.JobWitness === '') {
+        jobdata.JobWitnessAcitve = true
+        msgActive = false
+      } else {
+        jobdata.JobWitnessAcitve = false
+      }
+      if (jobdata.JobWitnessPhone !== '') {
+        let phoneone = jobdata.JobWitnessPhone.substring(0, 1)
+        if (phoneone === '1') {
+          if (!reg.test(jobdata.JobWitnessPhone)) {
+            reg.lastIndex = 0
+            jobdata.JobWitnessPhoneAcitve = true
+            msgActive = false
+          } else {
+            reg.lastIndex = 0
+            jobdata.JobWitnessPhoneAcitve = false
+          }
+        } else if (phoneone !== '1') {
+          if (!tellreg.test(jobdata.JobWitnessPhone)) {
+            tellreg.lastIndex = 0
+            jobdata.JobWitnessPhoneAcitve = true
+            msgActive = false
+          } else {
+            tellreg.lastIndex = 0
+            jobdata.JobWitnessPhoneAcitve = false
+          }
+        }
+      }
+      if (msgActive) {
+        if (ID === undefined) {
+          let listlength = this.$store.state.jobskill.jobdataList.length + 1
+          let addmsg = {
+            id: listlength,
+            StartTime: jobdata.StartTime,
+            EndTime: jobdata.EndTime,
+            unit: jobdata.JobUnit,
+            office: jobdata.JobOffice,
+            witness: jobdata.JobWitness,
+            witness_phone: jobdata.JobWitnessPhone,
+            Remarks: jobdata.JobRemarks
+          }
+          this.$store.commit('jobAddMsg', addmsg)
+          this.$router.push({
+            path: `/member`
+          })
+        } else {
+          let writemsg = {
+            id: ID,
+            StartTime: jobdata.StartTime,
+            EndTime: jobdata.EndTime,
+            unit: jobdata.JobUnit,
+            office: jobdata.JobOffice,
+            witness: jobdata.JobWitness,
+            witness_phone: jobdata.JobWitnessPhone,
+            Remarks: jobdata.JobRemarks
+          }
+          this.$store.commit('jobWriteMsg', writemsg)
+          this.$router.push({
+            path: `/member`
+          })
+        }
+        MessageBox('信息正确', '信息保存成功')
+      } else {
+        MessageBox('提交信息有误', '有误信息已经标红,请修改')
+      }
+    },
+    Job_remove () {
+      const ID = this.$route.query.name
+      if (ID === undefined) {
+        this.$router.push({
+          path: `/member`
+        })
+        MessageBox('信息删除', '信息删除成功')
+      } else {
+        this.$store.commit('jobRemoveMsg', ID)
+        this.$router.push({
+          path: `/member`
+        })
+        MessageBox('信息删除', '信息删除成功')
+      }
+    }
+  },
+  mounted () {
+    let self = this
+    window.onresize = function () {
+      return (function () {
+        self.screenHeight = document.documentElement.clientHeight
+      })()
+    }
+  },
+  watch: {
+    screenHeight (val) {
+      if (this.originHeight > val) {
+        this.isOriginHei = false
+      } else {
+        this.isOriginHei = true
+      }
+    },
+    'JobData.JobUnit' (val) {
+      if (val === '待业') {
+        this.JobData.JobOffice = '无'
+      }
+    },
+    'JobData.JobOffice' (val) {
+      if (val === '无') {
+        this.JobData.JobUnit = '待业'
+      }
+    }
+  },
+  activated () {
+    const ID = this.$route.query.name
+    const JobData = this.JobData
+    JobData.JobWitnessPhoneAcitve = false
+    JobData.EndTimeAcitve = false
+    JobData.JobUnitAcitve = false
+    JobData.JobOfficeAcitve = false
+    JobData.JobWitnessAcitve = false
+    if (ID === undefined) {
+      console.log('初始化模板')
+      JobData.StartTime = '请选择时间'
+      JobData.StartTimeAcitve = false
+      JobData.EndTime = '请选择时间'
+      JobData.JobUnit = ''
+      JobData.JobOffice = ''
+      JobData.JobWitness = ''
+      JobData.JobWitnessPhone = ''
+      JobData.JobRemarks = ''
+    } else {
+      let list = this.$store.state.jobskill.jobdataList
+      console.log('准备数据')
+      list.forEach(function (item) {
+        if (item.id === ID) {
+          JobData.StartTime = item.StartTime
+          JobData.EndTime = item.EndTime
+          JobData.JobUnit = item.unit
+          JobData.JobOffice = item.office
+          JobData.JobWitness = item.witness
+          JobData.JobWitnessPhone = item.witness_phone
+          JobData.JobRemarks = item.Remarks
+        }
+      })
+    }
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.border-bottom
+  &:before
+    border-color: $bottomcolor
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+    overflow:hidden
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+  .member-rightdel
+    box-sizing:border-box
+    float:right
+    width:20%
+    height:1.2rem
+    line-height:1.2rem
+    text-align:right
+    padding-right:.2rem
+.job_ul
+  margin-top:.1rem
+  box-sizing: border-box
+  width: 100%
+  padding-left: 0.2rem
+  .job_li
+    height: 0.9rem
+    line-height: 0.9rem
+    font-size: 0.27rem
+    display: flex
+    .job_left
+     flex:3
+     font-size:.3rem
+    .job_right
+      flex:9
+      font-size:.3rem
+     .job_right>input
+       width:100%
+     .job_time
+      margin-left:.1rem
+      font-size:.4rem
+.job_keep
+ height:1rem
+ display:flex
+ justify-content:space-around
+ align-items:center
+ position:fixed
+ left:0
+ right:0
+ bottom:.2rem
+ .job_btn
+   box-sizing:border-box
+   width:80%
+   text-align:center
+   padding: 0 0.8rem
+   text-align:center
+.job_title
+ box-sizing: border-box
+ margin-top:.2rem
+ padding-left: 0.2rem
+.job_memark
+  box-sizing: border-box
+  margin-top:.2rem
+  padding-left: 0.2rem
+  width: 100%
+  height:1.5rem
+  color: #999
+  background:#fff
+</style>

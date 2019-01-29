@@ -1,0 +1,80 @@
+<template>
+ <div>
+   <home-header></home-header>
+   <home-icon></home-icon>
+   <home-staff  v-show="Incumbent"></home-staff>
+   <home-entry  v-show="!Incumbent"></home-entry>
+ </div>
+</template>
+<script>
+import HomeHeader from './components/Header'
+import HomeIcon from './components/Imgicon'
+import HomeStaff from './components/Staff'
+import HomeEntry from './components/Entry'
+import { MessageBox } from 'mint-ui'
+// import '@/assets/styles/mint.css'
+
+export default {
+  name: 'Home',
+  components: {
+    HomeHeader,
+    HomeIcon,
+    HomeStaff,
+    HomeEntry
+  },
+  data () {
+    return {
+      Incumbent: true
+    }
+  },
+  created () {
+    let url = window.location.href
+    console.log('创建首页地址' + url)
+    const UserType = this.$route.query.hire_class
+    console.log('首页用户类型' + UserType)
+    const type = this.$route.query.type
+    console.log('进展程度' + type)
+    const hireId = this.$route.query.hireId
+    console.log('用户ID' + hireId)
+    // const UserType = 'A'
+    if (UserType === 'A') {
+      this.$store.commit('TYPEAkeep', true)
+    } else if (UserType === 'B') {
+      this.$store.commit('TYPEAkeep', false)
+    }
+    console.log('创建完毕')
+  },
+  methods: {
+    getCityjson () {
+      // let url = window.location.search
+      // console.log('首页地址' + url)
+      let that = this
+      this.axios.post('http://1.180.3.61:8766/PSIGW/RESTListeningConnector/PSFT_HR/LOCATION.v1/', {
+        TOKEN: 'hrssc.yili.com'
+      })
+        .then(function (response) {
+          console.log(response)
+          // console.log(response.data.provinceList)
+          window.localStorage.setItem('CityList', JSON.stringify(response.data))
+          let citymsg = response.data.provinceList
+          console.log('地区数据')
+          console.log(citymsg)
+          that.$store.commit('Citykeep', citymsg)
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    }
+  },
+  mounted () {
+    MessageBox('欢迎您进入《人员信息登记表》的填写阶段', '请您认真阅读后如实填写，如您对信息填写存在疑问，请查看“填写说明”（见页面右上方问号），我们会对您的信息进行严格保密，感谢您的理解与配合')
+    console.log('进入页面')
+    this.getCityjson()
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+.mint-msgbox-content >>> .mint-msgbox-message
+ color: red !important
+</style>

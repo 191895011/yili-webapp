@@ -1,0 +1,1163 @@
+<template>
+    <div>
+        <div class="Member-nav">
+         <router-link to="/member">
+           <div class="Member-back">
+              <span class="iconfont ">&#xe602;</span>
+              {{MemberTitle.back}}
+           </div>
+         </router-link>
+         <div class="Member-collection">
+            <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+         </div>
+         <div class="member-rightdel">
+            <el-button type="primary" icon="el-icon-delete" circle  @click="familymsg_remove"></el-button>
+         </div>
+       </div>
+       <ul class="job_ul">
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.relationActive}">
+             <i class="Requiredcolor">*</i>与本人关系
+           </div>
+           <div class="job_right" @click="User_Selectsk">
+              {{familymember.relation}}
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.nameActive}">
+            <i class="Requiredcolor">*</i>姓名
+           </div>
+           <div class="job_right">
+               <input type="text"
+                 placeholder="请在此处输入"
+                 v-model.trim="familymember.name"/>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.sexActive}">
+             <i class="Requiredcolor">*</i>性别
+           </div>
+           <div class="job_right" @click="User_Selectsexsk">
+               {{familymember.sex}}
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.birthdayActive}">
+             <i class="Requiredcolor">*</i>出生日期
+           </div>
+           <div class="job_right" @click="setDate">
+               {{familymember.birthday}}
+               <span class="iconfont job_time">&#xe644;</span>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.unitActive}">
+            <i class="Requiredcolor">*</i>工作单位/学习院校
+           </div>
+           <div class="job_right">
+               <input type="text"
+                 placeholder="请在此处输入"
+                 v-model.trim="familymember.unit"/>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.officeActive}">
+             <i class="Requiredcolor">*</i>职位/身份
+           </div>
+           <div class="job_right">
+               <input type="text" placeholder="请在此处输入" v-model.trim="familymember.office"/>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.addressActive}">
+             <i class="Requiredcolor">*</i>住址信息
+           </div>
+           <div class="job_right" @click="showAddressPicker">
+               {{familymember.address}}
+               <span class="iconfont Basiciconfont-time">&#xe64c;</span>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.inaddressActive}">
+            <i class="Requiredcolor">*</i>详细地址
+           </div>
+           <div class="job_right">
+               <input type="text" placeholder="精确到门牌号,农村地址具体到村" v-model.trim="familymember.inaddress"/>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.crashkActive}">
+             <i class="Requiredcolor">*</i>紧急联系人
+           </div>
+           <div class="job_right" @click="User_Selectcrashsk">
+               {{familymember.crash}}
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.contactphoneActive}">
+             联系方式
+           </div>
+           <div class="job_right">
+               <input type="number"
+                onkeypress="return( /[\d]/.test(String.fromCharCode(event.keyCode)))"
+                onkeyup="this.value = this.value.replace(/[^\d]/g, '')"
+                placeholder="请在此处输入"
+                v-model.trim="familymember.contactphone"/>
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.yilijobActive}">
+             <i class="Requiredcolor">*</i>是否在伊利工作
+           </div>
+           <div class="job_right" @click="User_Selectyilisk">
+               {{familymember.yilijob}}
+           </div>
+         </li>
+         <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.StaffIDActive}">
+             家庭成员员工ID
+           </div>
+           <div class="job_right">
+               <input type="number" v-show="userinputtype" onkeypress="return( /[\d]/.test(String.fromCharCode(event.keyCode)))" placeholder="请在此处输入"  v-model.trim="familymember.StaffID"/>
+               <input type="number"  v-show="!userinputtype" placeholder="" disabled="disabled" v-model.trim="familymember.StaffID"/>
+           </div>
+         </li>
+       <!--   <li class="job_li border-bottom">
+           <div class="job_left" :class="{ color_error: familymember.matejobActive}">
+             <i class="Requiredcolor" v-show="mateType">*</i>配偶是否有工作
+           </div>
+           <div class="job_right" @click="User_Selectmatesk" v-show="mateType">
+               {{familymember.matejob}}
+           </div>
+           <div class="job_right" v-show="!mateType">
+               <input type="text" v-model="familymember.matejob"  disabled="disabled" />
+           </div>
+         </li> -->
+       </ul>
+       <p class="job_title">备注</p>
+       <textarea class="job_memark" placeholder="请在此处输入" v-model.trim="familymember.Remarks"></textarea>
+       <div class="job_keep">
+          <mt-button type="primary" size="normal" class="job_btn" @click="familymsg_keep">保存</mt-button>
+         <!--  <mt-button type="danger" size="normal"  class="job_btn job_delete" @click="familymsg_remove">删除</mt-button> -->
+       </div>
+       <mt-popup
+          v-model="parentVisible"
+          position="bottom"
+          popup-transition="popup-fade">
+            <mt-picker :slots="slots" @change="onValuesChange"  class="levelselect" showToolbar>
+                 <div class="picker-toolbar-title">
+                     <div class="usi-btn-cancel" @click="User_Selectsk">
+                        取消
+                     </div>
+                     <div>
+                     </div>
+                     <div class="usi-btn-sure" @click="User_SelectSure">
+                       确定
+                     </div>
+                  </div>
+           </mt-picker>
+        </mt-popup>
+    <mt-popup
+        v-model="sexVisible"
+        position="bottom"
+        popup-transition="popup-fade">
+      <mt-picker :slots="sexslots" @change="onValuessexChange"  class="levelselect" showToolbar>
+           <div class="picker-toolbar-title">
+               <div class="usi-btn-cancel" @click="User_Selectsexsk">
+                  取消
+               </div>
+               <div>
+               </div>
+               <div class="usi-btn-sure" @click="User_SelectsexSure">
+                 确定
+               </div>
+            </div>
+     </mt-picker>
+   </mt-popup>
+   <mt-popup
+        v-model="crashVisible"
+        position="bottom"
+        popup-transition="popup-fade">
+      <mt-picker :slots="crashslots" @change="onValuescrashChange"  class="levelselect" showToolbar>
+           <div class="picker-toolbar-title">
+               <div class="usi-btn-cancel" @click="User_Selectcrashsk">
+                  取消
+               </div>
+               <div>
+               </div>
+               <div class="usi-btn-sure" @click="User_SelectcrashSure">
+                 确定
+               </div>
+            </div>
+     </mt-picker>
+   </mt-popup>
+   <mt-popup
+        v-model="yiliVisible"
+        position="bottom"
+        popup-transition="popup-fade">
+      <mt-picker :slots="yilislots" @change="onValuesyiliChange"  class="levelselect" showToolbar>
+           <div class="picker-toolbar-title">
+               <div class="usi-btn-cancel" @click="User_Selectyilisk">
+                  取消
+               </div>
+               <div>
+               </div>
+               <div class="usi-btn-sure" @click="User_SelectyiliSure">
+                 确定
+               </div>
+            </div>
+     </mt-picker>
+   </mt-popup>
+   <mt-popup
+        v-model="mateiVisible"
+        position="bottom"
+        popup-transition="popup-fade">
+      <mt-picker :slots="mateslots" @change="onValuesmateChange"  class="levelselect" showToolbar>
+           <div class="picker-toolbar-title">
+               <div class="usi-btn-cancel" @click="User_Selectmatesk">
+                  取消
+               </div>
+               <div>
+               </div>
+               <div class="usi-btn-sure" @click="User_SelectmateSure">
+                 确定
+               </div>
+            </div>
+     </mt-picker>
+   </mt-popup>
+   <!--demo 地区选择器-->
+<!--    <awesome-picker
+      ref="picker4"
+      :textTitle="picker4.textTitle"
+      :data="picker4.data"
+      :anchor="picker4.anchor"
+      :colorConfirm="picker4.areaconbg"
+      :colorCancel="picker4.areaconbg"
+      @confirm="handlePicker4Confirm">
+    </awesome-picker> -->
+    <!--测试地区 数据 demo-->
+    <mt-popup
+        v-model="regionVisible"
+        position="bottom"
+        popup-transition="popup-fade">
+        <mt-picker
+          class="levelselect"
+          :slots="myAddressSlots"
+          valueKey="value"
+          :visibleItemCount ="5"
+          @change="addressChange"
+          :itemHeight="40"
+          showToolbar>
+          <div class="picker-toolbar-title">
+               <div class="usi-btn-cancel" @click="showAddressPicker">
+                  取消
+               </div>
+               <div>
+               </div>
+               <div class="usi-btn-sure" @click="AddressPickerSure">
+                 确定
+               </div>
+            </div>
+        </mt-picker>
+    </mt-popup>
+</div>
+</template>
+
+<script type="text/javascript">
+import Vue from 'vue'
+import AwesomePicker from 'vue-awesome-picker'
+import { MessageBox } from 'mint-ui'
+import global_ from '@/pages/Global/global'
+Vue.use(AwesomePicker)
+
+export default {
+  name: 'FamilyData',
+  data () {
+    return {
+      parentVisible: false,
+      sexVisible: false,
+      crashVisible: false,
+      yiliVisible: false,
+      mateiVisible: false,
+      userinputtype: true,
+      mateType: true,
+      CITYLIST: [],
+      regionVisible: false, // 显示 隐藏
+      region: '', // 三级地址
+      province: '', // 省
+      city: '', // 市
+      county: '', // 县
+      provinceCode: '', // 省级代码
+      cityCode: '', // 市级代码
+      countyCode: '', // 县级代码
+      AreaList: this.$store.state.CityList,
+      regionInit: false, // 禁止地区选择器自动初始化，picker组件会默认进行初始化，导致一进入页面就会默认选中一个初始3级地址
+      Address: '',
+      MemberTitle: {
+        back: '返回',
+        title: '家庭成员'
+      },
+      familymember: {
+        relation: '',
+        relationActive: false,
+        name: '',
+        nameActive: false,
+        sex: '',
+        sexActive: false,
+        birthday: '请选择时间',
+        birthdayActive: false,
+        contactphone: '',
+        contactphoneActive: false,
+        unit: '',
+        unitActive: false,
+        office: '',
+        officeActive: false,
+        address: '请选择地区',
+        addressActive: false,
+        address_set: '北京北京东城区',
+        inaddress: '',
+        inaddressActive: false,
+        crash: '是',
+        crashkActive: false,
+        yilijob: '是',
+        yilijobActive: false,
+        StaffID: '140XXXXXXXXX',
+        StaffIDActive: false,
+        matejob: '是',
+        relation_set: '',
+        matejobActive: false,
+        sex_set: '',
+        crash_set: '',
+        yilijob_set: '',
+        matejob_set: '',
+        Remarks: ''
+      },
+      slots: [
+        {
+          flex: 1,
+          values: ['配偶', '子', '女', '父/母', '兄/嫂', '弟/弟媳', '姐/姐夫', '妹/妹夫', '其他'],
+          textAlign: 'center',
+          defaultIndex: 0,
+          value: '配偶',
+          valueKey: 0
+        }
+      ],
+      sexslots: [
+        {
+          flex: 1,
+          values: ['男', '女'],
+          textAlign: 'center',
+          defaultIndex: 0,
+          value: '男',
+          valueKey: 0
+        }
+      ],
+      crashslots: [
+        {
+          flex: 1,
+          values: ['是', '否'],
+          textAlign: 'center',
+          defaultIndex: 0,
+          value: '是',
+          valueKey: 0
+        }
+      ],
+      yilislots: [
+        {
+          flex: 1,
+          values: ['是', '否'],
+          textAlign: 'center',
+          defaultIndex: 0,
+          value: '是',
+          valueKey: 0
+        }
+      ],
+      mateslots: [
+        {
+          flex: 1,
+          values: ['是', '否'],
+          textAlign: 'center',
+          defaultIndex: 0,
+          value: '是',
+          valueKey: 0
+        }
+      ],
+      // 地区选择数据
+      myAddressSlots: [
+        {
+          flex: 1,
+          values: this.getProvinceArr(this.$store.state.CityList), // 省份数组
+          textAlign: 'center'
+        },
+        {
+          divider: true,
+          content: ''
+        },
+        {
+          flex: 1,
+          values: this.getCityArr(this.$store.state.CityList, '北京'),
+          textAlign: 'center'
+        },
+        {
+          divider: true,
+          content: ''
+        },
+        {
+          flex: 1,
+          values: this.getCountyArr(this.$store.state.CityList, '北京', '北京'),
+          textAlign: 'center'
+        }
+      ]
+      // picker4: {
+      //   anchor: [],
+      //   textTitle: '',
+      //   areaconbg: '#000',
+      //   data: areaData
+      // }
+    }
+  },
+  methods: {
+    // 测试 地区 显示 隐藏
+    showAddressPicker () {
+      this.regionVisible = !this.regionVisible
+    },
+    // 点击 确定
+    AddressPickerSure () {
+      this.regionVisible = !this.regionVisible
+      if (this.familymember.address_set === '') {
+        this.familymember.address_set = '北京北京东城区'
+      }
+      this.familymember.address = this.familymember.address_set
+    },
+    // 改变地区
+    addressChange (picker, values) {
+      // console.log(picker)
+      // console.table(values)
+      if (this.regionInit) {
+        // 取值并赋值
+        this.region = values[0]['value'] + values[1]['value'] + values[2]['value']
+        this.familymember.address_set = values[0]['value'] + values[1]['value'] + values[2]['value']
+        console.log(this.region)
+        this.province = values[0]['value']
+        this.city = values[1]['value']
+        this.county = values[2]['value']
+        this.provinceCode = values[0]['id']
+        this.cityCode = values[1]['id']
+        this.countyCode = values[2]['id']
+        // console.log(picker.getSlotValue(0))
+        // console.table(picker.getSlotValues(0))
+        // console.table(picker.getValues())
+        // 给市、县赋值
+        picker.setSlotValues(1, this.getCityArr(this.AreaList, values[0]['value']))
+        picker.setSlotValues(2, this.getCountyArr(this.AreaList, values[0]['value'], values[1]['value']))
+      } else {
+        this.regionInit = true
+      }
+    },
+    // 遍历json，返回省级对象数组
+    getProvinceArr (city) {
+      let provinceArr = []
+      // console.log(city)
+      city.forEach(function (item) {
+        let obj = {}
+        obj.value = item.value
+        obj.id = item.id
+        provinceArr.push(obj)
+      })
+      return provinceArr
+    },
+    // 遍历json，返回市级对象数组
+    getCityArr (list, province) {
+      // console.log('省:' + province)
+      let cityArr = []
+      list.forEach(function (item) {
+        if (item.value === province) {
+          item.cityList.forEach(function (args) {
+            let obj = {}
+            obj.value = args.value
+            obj.id = args.id
+            cityArr.push(obj)
+          })
+        }
+      })
+      // console.log(cityArr)
+      return cityArr
+    },
+    getCountyArr (list, province, city) {
+      let countyArr = []
+      // console.log(province)
+      // console.log(city)
+      list.forEach(function (item) {
+        if (item.value === province) {
+          item.cityList.forEach(function (args) {
+            if (args.value === city) {
+              // console.log('三级数据' + city)
+              args.areaList.forEach(function (param) {
+                let obj = {}
+                obj.value = param.value
+                obj.id = param.id
+                countyArr.push(obj)
+              })
+            }
+          })
+        }
+      })
+      // console.log(countyArr)
+      return countyArr
+    },
+    User_Selectsk () {
+      this.parentVisible = !this.parentVisible
+    },
+    User_SelectSure () {
+      if (this.familymember.relation_set === '') {
+        this.familymember.relation_set = this.slots[0].value
+      }
+      this.familymember.relation = this.familymember.relation_set
+      this.parentVisible = !this.parentVisible
+    },
+    onValuesChange (picker, values) {
+      this.familymember.relation_set = values[0]
+      if (values[0] > values[1]) {
+        picker.setSlotValue(1, values[0])
+      }
+    },
+    User_Selectsexsk () {
+      this.sexVisible = !this.sexVisible
+    },
+    User_SelectsexSure () {
+      if (this.familymember.sex_set === '') {
+        this.familymember.sex_set = this.sexslots[0].value
+      }
+      this.familymember.sex = this.familymember.sex_set
+      this.sexVisible = !this.sexVisible
+    },
+    onValuessexChange (picker, values) {
+      this.familymember.sex_set = values[0]
+      if (values[0] > values[1]) {
+        picker.setSlotValue(1, values[0])
+      }
+    },
+    // 紧急联系人
+    User_Selectcrashsk () {
+      this.crashVisible = !this.crashVisible
+    },
+    User_SelectcrashSure () {
+      if (this.familymember.crash_set === '') {
+        this.familymember.crash_set = this.crashslots[0].value
+      }
+      this.familymember.crash = this.familymember.crash_set
+      this.crashVisible = !this.crashVisible
+    },
+    onValuescrashChange (picker, values) {
+      this.familymember.crash_set = values[0]
+      if (values[0] > values[1]) {
+        picker.setSlotValue(1, values[0])
+      }
+    },
+    // 是否在伊利工作
+    User_Selectyilisk () {
+      this.yiliVisible = !this.yiliVisible
+    },
+    User_SelectyiliSure () {
+      if (this.familymember.yilijob_set === '') {
+        this.familymember.yilijob_set = this.yilislots[0].value
+      }
+      this.yiliVisible = !this.yiliVisible
+      this.familymember.yilijob = this.familymember.yilijob_set
+    },
+    onValuesyiliChange (picker, values) {
+      this.familymember.yilijob_set = values[0]
+      if (values[0] > values[1]) {
+        picker.setSlotValue(1, values[0])
+      }
+    },
+    // 配偶是否有工作
+    User_Selectmatesk () {
+      this.mateiVisible = !this.mateiVisible
+    },
+    User_SelectmateSure () {
+      if (this.familymember.matejob_set === '') {
+        this.familymember.matejob_set = this.mateslots[0].value
+      }
+      this.familymember.matejob = this.familymember.matejob_set
+      this.mateiVisible = !this.mateiVisible
+    },
+    onValuesmateChange (picker, values) {
+      this.familymember.matejob_set = values[0]
+      if (values[0] > values[1]) {
+        picker.setSlotValue(1, values[0])
+      }
+    },
+    setDate () {
+      this.$picker.show({
+        type: 'datePicker',
+        endTime: '2280-02-11',
+        startTime: '1900-01-01',
+        onOk: (date) => {
+          this.familymember.birthday = date
+        }
+      })
+    },
+    // showPicker4 () {
+    //   this.$refs.picker4.show()
+    // },
+    // handlePicker4Confirm (v) {
+    //   this.picker4.anchor = v
+    //   this.value = v ? JSON.stringify(v) : null
+    //   // console.log('籍贯id是否正确' + JSON.stringify(this.picker4))
+    //   let objarea = JSON.parse(this.value)
+    //   this.familymember.address = objarea[0].value + ' ' + objarea[1].value + ' ' + objarea[2].value
+    // },
+    familymsg_keep () {
+      // not js verification
+      // const ID = this.$route.query.name
+      // const familymember = this.familymember
+      // if (ID === undefined) {
+      //   let listlength = this.$store.state.family.FamilyList.length + 1
+      //   let addmsg = {
+      //     id: listlength,
+      //     relation: familymember.relation,
+      //     name: familymember.name,
+      //     sex: familymember.sex,
+      //     BirthdayDate: familymember.birthday,
+      //     ContactPhone: familymember.contactphone,
+      //     unit: familymember.unit,
+      //     Identity: familymember.office,
+      //     address: familymember.address,
+      //     inaddress: familymember.inaddress,
+      //     urgent: familymember.crash,
+      //     yilijob: familymember.yilijob,
+      //     StaffID: familymember.StaffID,
+      //     spousejob: familymember.matejob
+      //   }
+      //   this.$store.commit('FamilyAddMsg', addmsg)
+      //   this.$router.push({
+      //     path: `/member`
+      //   })
+      // } else {
+      //   let writemsg = {
+      //     id: ID,
+      //     relation: familymember.relation,
+      //     name: familymember.name,
+      //     sex: familymember.sex,
+      //     BirthdayDate: familymember.birthday,
+      //     ContactPhone: familymember.contactphone,
+      //     unit: familymember.unit,
+      //     Identity: familymember.office,
+      //     address: familymember.address,
+      //     inaddress: familymember.inaddress,
+      //     urgent: familymember.crash,
+      //     yilijob: familymember.yilijob,
+      //     StaffID: familymember.StaffID,
+      //     spousejob: familymember.matejob
+      //   }
+      //   this.$store.commit('FamilyWriteMsg', writemsg)
+      //   this.$router.push({
+      //     path: `/member`
+      //   })
+      // }
+      // MessageBox('信息正确', '信息保存成功')
+      let message = true
+      const familymember = this.familymember
+      const usersexvalue = this.$store.state.usermsglist.msgdatalist[0].SexValue
+      console.log('性别' + usersexvalue)
+      const userMarriage = this.$store.state.usermsglist.msgdatalist[0].Marriage
+      console.log('婚姻状况' + userMarriage)
+      const userAge = global_.jsGetAge
+      let userwifestate = true
+      const reg = global_.userPhone
+      reg.lastIndex = 0
+      const addressreg = global_.AddressReg
+      addressreg.lastIndex = 0
+      const tellreg = global_.usertellPhone
+      tellreg.lastIndex = 0
+      const ID = this.$route.query.name
+      if (familymember.name === '') {
+        familymember.nameActive = true
+        message = false
+      } else {
+        familymember.nameActive = false
+      }
+      if (familymember.relation === '') {
+        familymember.relationActive = true
+        message = false
+      } else {
+        familymember.relationActive = false
+      }
+      // user Marriage and wife
+      if (userMarriage !== '' && userMarriage !== '已婚') {
+        if (familymember.relation === '配偶') {
+          familymember.relationActive = true
+          userwifestate = false
+          message = false
+        } else {
+          userwifestate = true
+          familymember.relationActive = false
+        }
+      }
+      if (familymember.relation === '配偶' && familymember.sex === usersexvalue) {
+        familymember.relationActive = true
+        familymember.sexActive = true
+        message = false
+      } else if (familymember.relation !== '') {
+        familymember.relationActive = false
+        familymember.sexActive = false
+      }
+      // if (familymember.relation === '配偶' && familymember.matejob === '') {
+      //   familymember.matejobActive = true
+      //   message = false
+      // } else {
+      //   familymember.matejobActive = false
+      // }
+      if (!userwifestate) {
+        familymember.relationActive = true
+      } else {
+        familymember.relationActive = false
+      }
+      if (familymember.sex === '') {
+        familymember.sexActive = true
+        message = false
+      } else {
+        familymember.sexActive = false
+      }
+      if (familymember.birthday === '请选择时间') {
+        familymember.birthdayActive = true
+        message = false
+      } else {
+        familymember.birthdayActive = false
+      }
+      if (familymember.birthday !== '请选择时间') {
+        let age = userAge(familymember.birthday)
+        if (age > 100 || age < -1) {
+          familymember.birthdayActive = true
+          message = false
+        } else {
+          familymember.birthdayActive = false
+        }
+      }
+      if (familymember.address === '请选择地区') {
+        familymember.addressActive = true
+        message = false
+      } else {
+        familymember.addressActive = false
+      }
+      if (familymember.unit === '') {
+        familymember.unitActive = true
+        message = false
+      } else {
+        familymember.unitActive = false
+      }
+      if (familymember.office === '') {
+        familymember.officeActive = true
+        message = false
+      } else {
+        familymember.officeActive = false
+      }
+      if (!addressreg.test(familymember.inaddress)) {
+        addressreg.lastIndex = 0
+        familymember.inaddressActive = true
+        message = false
+      } else {
+        addressreg.lastIndex = 0
+        familymember.inaddressActive = false
+      }
+      if (familymember.crash === '') {
+        familymember.crashkActive = true
+        message = false
+      }
+      if (familymember.crash === '是') {
+        if (familymember.contactphone === '') {
+          familymember.contactphoneActive = true
+          message = false
+        } else if (familymember.contactphone !== '') {
+          let phoneone = familymember.contactphone.substring(0, 1)
+          if (phoneone === '1') {
+            if (!reg.test(familymember.contactphone)) {
+              reg.lastIndex = 0
+              familymember.contactphoneActive = true
+              message = false
+            } else {
+              reg.lastIndex = 0
+              familymember.contactphoneActive = false
+            }
+          } else if (phoneone !== '1') {
+            if (!tellreg.test(familymember.contactphone)) {
+              tellreg.lastIndex = 0
+              familymember.contactphoneActive = true
+              message = false
+            } else {
+              tellreg.lastIndex = 0
+              familymember.contactphoneActive = false
+            }
+          }
+        }
+      } else if (familymember.crash === '否') {
+        if (familymember.contactphone === '') {
+          familymember.contactphoneActive = false
+          familymember.crashkActive = false
+          familymember.contactphone = ''
+        } else if (familymember.contactphone !== '') {
+          let phoneone = familymember.contactphone.substring(0, 1)
+          if (phoneone === '1') {
+            if (!reg.test(familymember.contactphone)) {
+              reg.lastIndex = 0
+              familymember.contactphoneActive = true
+              message = false
+            } else {
+              reg.lastIndex = 0
+              familymember.contactphoneActive = false
+            }
+          } else if (phoneone !== '1') {
+            if (!tellreg.test(familymember.contactphone)) {
+              tellreg.lastIndex = 0
+              familymember.contactphoneActive = true
+              message = false
+            } else {
+              tellreg.lastIndex = 0
+              familymember.contactphoneActive = false
+            }
+          }
+        }
+      }
+      if (familymember.yilijob === '是' && familymember.StaffID === '') {
+        familymember.StaffIDActive = true
+        message = false
+      } else if (familymember.yilijob === '是' && familymember.StaffID !== '') {
+        if (isNaN(Number(familymember.StaffID))) {
+          familymember.StaffIDActive = true
+          message = false
+        } else {
+          familymember.StaffIDActive = false
+        }
+      } else if (familymember.yilijob === '否') {
+        familymember.StaffIDActive = false
+      }
+      // 是否在伊利工作
+      if (familymember.yilijob === '') {
+        familymember.yilijobActive = true
+        message = false
+      } else if (familymember.yilijob !== '') {
+        familymember.yilijobActive = false
+      }
+      if (message) {
+        // 没结婚 有配偶
+        // if (!userwifestate) {
+        //   MessageBox({
+        //     title: '提交信息有误',
+        //     message: '配偶信息有误,确定执行此操作?',
+        //     showCancelButton: true
+        //   })
+        //   MessageBox.confirm('配偶信息有误,确定执行此操作?').then(action => {
+        //     if (ID === undefined) {
+        //       let listlength = this.$store.state.family.FamilyList.length + 1
+        //       let addmsg = {
+        //         id: listlength,
+        //         relation: familymember.relation,
+        //         name: familymember.name,
+        //         sex: familymember.sex,
+        //         BirthdayDate: familymember.birthday,
+        //         ContactPhone: familymember.contactphone,
+        //         unit: familymember.unit,
+        //         Identity: familymember.office,
+        //         address: familymember.address,
+        //         inaddress: familymember.inaddress,
+        //         urgent: familymember.crash,
+        //         yilijob: familymember.yilijob,
+        //         StaffID: familymember.StaffID,
+        //         spousejob: familymember.matejob,
+        //         Remarks: familymember.Remarks
+        //       }
+        //       this.$store.commit('FamilyAddMsg', addmsg)
+        //       this.$router.push({
+        //         path: `/member`
+        //       })
+        //     } else {
+        //       let writemsg = {
+        //         id: ID,
+        //         relation: familymember.relation,
+        //         name: familymember.name,
+        //         sex: familymember.sex,
+        //         BirthdayDate: familymember.birthday,
+        //         ContactPhone: familymember.contactphone,
+        //         unit: familymember.unit,
+        //         Identity: familymember.office,
+        //         address: familymember.address,
+        //         inaddress: familymember.inaddress,
+        //         urgent: familymember.crash,
+        //         yilijob: familymember.yilijob,
+        //         StaffID: familymember.StaffID,
+        //         spousejob: familymember.matejob,
+        //         Remarks: familymember.Remarks
+        //       }
+        //       this.$store.commit('FamilyWriteMsg', writemsg)
+        //       this.$router.push({
+        //         path: `/member`
+        //       })
+        //     }
+        //     MessageBox('信息正确', '信息保存成功')
+        //   }, () => {
+        //     console.log('取消')
+        //   })
+        // } else {
+        // }
+        // 正常情况
+        if (ID === undefined) {
+          let listlength = this.$store.state.family.FamilyList.length + 1
+          let addmsg = {
+            id: listlength,
+            relation: familymember.relation,
+            name: familymember.name,
+            sex: familymember.sex,
+            BirthdayDate: familymember.birthday,
+            ContactPhone: familymember.contactphone,
+            unit: familymember.unit,
+            Identity: familymember.office,
+            address: familymember.address,
+            inaddress: familymember.inaddress,
+            urgent: familymember.crash,
+            yilijob: familymember.yilijob,
+            StaffID: familymember.StaffID,
+            spousejob: familymember.matejob,
+            Remarks: familymember.Remarks
+          }
+          this.$store.commit('FamilyAddMsg', addmsg)
+          this.$router.push({
+            path: `/member`
+          })
+        } else {
+          let writemsg = {
+            id: ID,
+            relation: familymember.relation,
+            name: familymember.name,
+            sex: familymember.sex,
+            BirthdayDate: familymember.birthday,
+            ContactPhone: familymember.contactphone,
+            unit: familymember.unit,
+            Identity: familymember.office,
+            address: familymember.address,
+            inaddress: familymember.inaddress,
+            urgent: familymember.crash,
+            yilijob: familymember.yilijob,
+            StaffID: familymember.StaffID,
+            spousejob: familymember.matejob,
+            Remarks: familymember.Remarks
+          }
+          this.$store.commit('FamilyWriteMsg', writemsg)
+          this.$router.push({
+            path: `/member`
+          })
+        }
+        MessageBox('信息正确', '信息保存成功')
+        // 正常情况结束
+      } else {
+        MessageBox('提交信息有误', '有误信息已经标红,请修改')
+      }
+    },
+    familymsg_remove () {
+      const ID = this.$route.query.name
+      if (ID === undefined) {
+        this.$router.push({
+          path: `/member`
+        })
+        MessageBox('信息删除', '信息删除成功')
+      } else {
+        this.$store.commit('FamilyRemoveMsg', ID)
+        this.$router.push({
+          path: `/member`
+        })
+        MessageBox('信息删除', '信息删除成功')
+      }
+    }
+  },
+  watch: {
+    'familymember.yilijob' (val) {
+      if (val === '是') {
+        this.userinputtype = true
+      } else if (val === '否' || val === '') {
+        this.familymember.StaffID = ''
+        this.userinputtype = false
+      }
+    }
+  },
+  computed: {
+    citylist () {
+      let city = JSON.parse(localStorage.CityList)
+      let cityarr = city.provinceList
+      return cityarr
+    }
+  },
+  created () {
+    console.log('进入页面')
+  },
+  mounted () {
+    // console.log(this.$route.query.id)
+    console.log(this.AreaList)
+    let city = JSON.parse(localStorage.CityList)
+    let cityarr = city.provinceList
+    this.CITYLIST = cityarr
+    console.log(cityarr)
+    let username = this.$store.state.usermsglist.msgdatalist[0].Name
+    console.log(username)
+    const ID = this.$route.query.name
+    if (ID === undefined) {
+      console.log('新建模板')
+      const familymember = this.familymember
+      familymember.relation = ''
+      familymember.relation_set = ''
+      familymember.relationActive = false
+      familymember.name = ''
+      familymember.nameActive = false
+      familymember.sex = ''
+      familymember.sexActive = false
+      familymember.birthday = '请选择时间'
+      familymember.birthdayActive = false
+      familymember.contactphone = ''
+      familymember.contactphoneActive = false
+      familymember.unit = ''
+      familymember.unitActive = false
+      familymember.office = ''
+      familymember.officeActive = false
+      familymember.address = '请选择地区'
+      familymember.addressActive = false
+      familymember.inaddress = ''
+      familymember.inaddressActive = false
+      familymember.crash = ''
+      familymember.crashkActive = false
+      familymember.yilijob = ''
+      familymember.yilijobActive = false
+      familymember.StaffID = ''
+      familymember.StaffIDActive = false
+      familymember.matejob = ''
+      familymember.Remarks = ''
+      familymember.sex_set = ''
+      familymember.crash_set = ''
+      familymember.yilijob_set = ''
+      familymember.matejob_set = ''
+    } else {
+      const familymember = this.familymember
+      let list = this.$store.state.family.FamilyList
+      list.forEach(function (item) {
+        if (item.id === ID) {
+          familymember.relation = item.relation
+          familymember.name = item.name
+          familymember.sex = item.sex
+          familymember.birthday = item.BirthdayDate
+          familymember.contactphone = item.ContactPhone
+          familymember.unit = item.unit
+          familymember.office = item.Identity
+          familymember.address = item.address
+          familymember.inaddress = item.inaddress
+          familymember.crash = item.urgent
+          familymember.yilijob = item.yilijob
+          familymember.StaffID = item.StaffID
+          familymember.Remarks = item.Remarks
+        }
+      })
+      familymember.relationActive = false
+      familymember.nameActive = false
+      familymember.sexActive = false
+      familymember.contactphoneActive = false
+      familymember.unitActive = false
+      familymember.officeActive = false
+      familymember.inaddressActive = false
+      familymember.crashkActive = false
+      familymember.yilijobActive = false
+      familymember.StaffIDActive = false
+    }
+  }
+}
+</script>
+
+<style type="text/css" lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.border-bottom
+  &:before
+    border-color: $bottomcolor
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+    overflow:hidden
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+  .member-rightdel
+    box-sizing:border-box
+    float:right
+    width:20%
+    height:1.2rem
+    line-height:1.2rem
+    text-align:right
+    padding-right:.2rem
+.job_ul
+  margin-top:.1rem
+  box-sizing: border-box
+  width: 100%
+  padding-left: 0.2rem
+  .job_li
+    height: 0.9rem
+    line-height: 0.9rem
+    font-size: 0.27rem
+    display: flex
+    .job_left
+     flex:5
+     font-size:.3rem
+    .job_right
+     flex:7
+     font-size:.3rem
+    .job_right>input
+      width:100%
+     .job_time
+      margin-left:.1rem
+      font-size:.4rem
+.job_title
+ box-sizing: border-box
+ margin-top:.2rem
+ padding-left: 0.2rem
+.job_memark
+  box-sizing: border-box
+  margin-top:.2rem
+  padding-left: 0.2rem
+  width: 100%
+  height:1.5rem
+  color: #999
+  background:#fff
+.job_keep
+ height:1rem
+ display:flex
+ justify-content:space-around
+ align-items:center
+ background:#fff
+ .job_btn
+   box-sizing:border-box
+   width:80%
+   text-align:center
+   padding: 0 0.8rem
+   text-align:center
+.levelselect
+  width:$selectWidth
+  .picker-toolbar-title
+    display:flex
+    flex-direction: row
+    justify-content: space-around
+    height: 40px
+    line-height: 40px
+    font-size: 16px
+</style>

@@ -1,0 +1,653 @@
+<template>
+ <div class="staff-menu">
+   <ul class="staff-ul">
+     <li class="staff-li" @click="ToMember" v-show="PersonalMsg">
+        <div class="staff-left">
+          <div class="staff-imgcontent">
+           <span class="iconfont staff-label">&#xe625;</span>
+          </div>
+        </div>
+        <div class="staff-title">员工信息采集</div>
+     </li>
+     <li class="staff-li" @click="ToEntry" v-show="PersonalPht">
+        <div class="staff-left">
+          <div class="staff-imgcontent">
+           <span class="iconfont staff-label">&#xe604;</span>
+          </div>
+        </div>
+        <div class="staff-title">入职材料补充</div>
+     </li>
+     <li class="staff-li" @click="ToSecond" v-show="SecondInfoShow">
+        <div class="staff-left">
+          <div class="staff-imgcontent">
+           <span class="iconfont staff-label">&#xe604;</span>
+          </div>
+        </div>
+        <div class="staff-title">二次信息采集</div>
+     </li>
+   </ul>
+ </div>
+</template>
+<script>
+import { mapState } from 'vuex'
+import {Indicator, MessageBox} from 'mint-ui'
+import ValueList from '@/assets/js/valuelist'
+import global_ from '@/pages/Global/global'
+
+export default {
+  name: 'HomeStaff',
+  data () {
+    return {
+      list: ''
+    }
+  },
+  created () {
+    let url = window.location.href
+    let urlway = window.location.protocol
+    if (urlway === 'http:') {
+      ValueList.HttpArr = 'http://1.180.3.61:8766/SSCDEV'
+    } else {
+      ValueList.HttpArr = 'https://hrssc.yili.com:8765/SSCDEV'
+    }
+    console.log('创建首页地址' + url)
+  },
+  methods: {
+    ToMember () {
+      this.$router.push({
+        path: `/member`
+      })
+    },
+    ToEntry () {
+      this.$router.push({
+        path: `/entry`
+      })
+    },
+    ToSecond () {
+      this.$router.push({
+        path: `/second`
+      })
+    },
+    // 开始
+    // 获取省市区数据
+    getCityjson () {
+      let that = this
+      Indicator.open('加载中...')
+      console.log('请选择加载方式')
+      console.log(ValueList.HttpArr)
+      const GetRequest = global_.GetRequest
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/LOCATION.v1/', {
+        TOKEN: 'hrssc.yili.com'
+      })
+        .then(function (response) {
+          console.log(response)
+          // console.log(response.data.provinceList)
+          window.localStorage.setItem('CityList', JSON.stringify(response.data))
+          let citymsg = response.data.provinceList
+          console.log('地区数据')
+          console.log(citymsg)
+          that.$store.commit('Citykeep', citymsg)
+          that.userType(GetRequest())
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 登录获取页面信息
+    getUserJson (urlarr) {
+      console.log(urlarr.type) // 判断 是否第一次填写
+      console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/CompleteStatus.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: urlarr.hireId,
+        'type': urlarr.type
+      })
+        .then(function (response) {
+          console.log(response)
+          console.log('状态码' + response.data.status)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.UserJsonSuccess(response.data)
+          } else {
+            that.UserJsonError(response.data.msg)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 获取附件信息
+    getUserAnnexJson (urlarr) {
+      console.log(urlarr.type) // 判断 是否第一次填写
+      console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/GetAttachItems.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: urlarr.hireId,
+        'type': urlarr.type
+      })
+        .then(function (response) {
+          console.log(response)
+          console.log('附件状态码' + response.data.status)
+          console.log(response.data.JsonData)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.EntryJsonSuccess(response.data.JsonData)
+          } else {
+            that.EntryJsonError(response.data.msg)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 登录获取二次页面信息
+    getUserSecondJson (urlarr) {
+      console.log(urlarr.type) // 判断 是否第一次填写
+      console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/CompleteStatus.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: urlarr.hireId,
+        'type': urlarr.type
+      })
+        .then(function (response) {
+          console.log('二次基本信息')
+          console.log(response)
+          console.log('状态码' + response.data.status)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.UserSecondJsonSuccess(response.data)
+          } else {
+            that.UserSecondJsonError(response.data.msg)
+          }
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+    // 第二次获取附件信息
+    getUserSecondAnnexJson (urlarr) {
+      console.log(urlarr.type) // 判断 是否第一次填写
+      console.log(urlarr.hireId) // 用户ID
+      let that = this
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/GetAttachItems.v1/', {
+        TOKEN: 'hrssc.yili.com',
+        hireId: urlarr.hireId,
+        'type': urlarr.type
+      })
+        .then(function (response) {
+          console.log('附件信息')
+          console.log(response)
+          console.log(response.data)
+          let state = Number(response.data.status)
+          if (state === 0) {
+            that.GetSecondEntrySuccess(response.data)
+          } else {
+            // that.UserSecondJsonError(response.data.msg)
+          }
+          console.log('附件状态码' + response.data.status)
+        })
+        .catch(function (error) {
+          console.log(error)
+          // that.GetSecondEntryerror(error)
+        })
+    },
+    // 判断A类 B类 是否第一次填写
+    userType (arr) {
+      // console.log(urlarr)
+      let urlarr = {
+        hireId: 'OTAwMDAwMDI=',
+        type: '1',
+        hire_class: 'B'
+      }
+      console.log(urlarr.type) // 判断 是否第一次填写
+      console.log(urlarr.hireId) // 用户ID
+      if (urlarr) {
+        this.$store.commit('UserIdArrReplace', urlarr)
+      }
+      if (urlarr.type === '1') {
+        console.log('第一次填写')
+        this.getUserJson(urlarr)
+        this.getUserAnnexJson(urlarr)
+        MessageBox('欢迎您进入《人员信息登记表》的填写阶段', '请您认真阅读后如实填写，如您对信息填写存在疑问，请查看“填写说明”（见页面右上方问号），我们会对您的信息进行严格保密，感谢您的理解与配合')
+      } else if (urlarr.type === '2') {
+        console.log('第二次填写')
+        this.$store.commit('UserIdSecondInfoShow')
+        this.getUserSecondJson(urlarr)
+        this.getUserSecondAnnexJson(urlarr)
+        Indicator.close()
+      }
+      if (urlarr.type === 1) {
+        console.log('数字第一次填写')
+      } else if (urlarr.type === 2) {
+        console.log('数字第二次填写')
+        Indicator.close()
+      }
+      if (urlarr.hire_class === 'A') {
+        console.log('A类')
+        this.$store.commit('TYPEAkeep', true)
+      } else if (urlarr.hire_class === 'B') {
+        console.log('B类')
+        this.$store.commit('TYPEAkeep', false)
+      }
+    },
+    // 查看数据库信息 修改个人信息
+    UserJsonSuccess (data) {
+      let ArrData = data.JsonData
+      let AreaListData = this.$store.state.CityList
+      let Name = ArrData.NAME // 名字
+      let usercountry // 国籍
+      let IDTypeJson = ValueList.GetIDTypeList(ArrData.NID_TYPE).name// 身份证类型 name
+      let userIdTypeCodeJson = ValueList.GetIDTypeList(ArrData.NID_TYPE).code// 身份证类型code
+      let userIdNumber = ArrData.NID // 证件号码
+      let userRace = ValueList.GetRaceList(ArrData.ETHNIC_GRP_CD).name // 民族
+      let userRacecode = ValueList.GetIDTypeList(ArrData.ETHNIC_GRP_CD).code // 民族code
+      let SexValueJson = ValueList.GetSexList(ArrData.SEX).name// 性别 name
+      let SexValueCodeJson = ValueList.GetSexList(ArrData.SEX).code// 性别code
+      let UserHomeTownJson = ArrData.JG_PROVINCE + '' + ArrData.JG_CITY + '' + ArrData.JG_AREA // 籍贯
+      let UserBornJson = ArrData.BIRTHDATE // 出生日期
+      let UserPoliticalJson = ValueList.GetPoliticalList(ArrData.POLITICAL_STA_CHN).name // 政治面貌 name
+      let UserPoliticalCodeJson = ValueList.GetPoliticalList(ArrData.POLITICAL_STA_CHN).code// 政治面貌 code
+      let UserHeightJson = ArrData.PERS_HEIGHT // 身高
+      let UserBloodJson = ValueList.GetBloodList(ArrData.BLOOD).name/// 血型 name
+      let UserBloodCodeJson = ValueList.GetBloodList(ArrData.BLOOD).code// 血型 code
+      let UserReligionJson = ValueList.GetReligionList(ArrData.RELIGION).name// 宗教信仰 name
+      let UserReligionCodeJson = ValueList.GetReligionList(ArrData.RELIGION).code // 宗教信仰 code
+      let UserSpecialtyJson = ArrData.SPECIALITY // 个人特长
+      let UserMarriageJson = ValueList.GetMarriageList(ArrData.MAR_STATUS).name// 婚姻状况 name
+      let UserMarriageCodeJson = ValueList.GetMarriageList(ArrData.MAR_STATUS).code// 婚姻状况 code
+      let UserAccountJson = ValueList.GetAccountList(ArrData.HUKOU_TYPE_CHN).name// 户口性质 name
+      let UserAccountCodeJson = ValueList.GetAccountList(ArrData.HUKOU_TYPE_CHN).code // 户口性质 code
+      let UserOnlyChildJson = ValueList.GetNoList(ArrData.C_BEAR).name // 独生子女name
+      let UserOnlyChildCodeJson = ValueList.GetNoList(ArrData.C_BEAR).code // 独生子女code
+      let UserBornPlaceJson = ArrData.BIRTH_PROVINCE + '' + ArrData.BIRTH_CITY + '' + ArrData.BIRTH_AREA // 出生地点
+      let userCensusJson = ArrData.HJ_PROVINCE + '' + ArrData.HJ_CITY + '' + ArrData.HJ_AREA // 户籍地址
+      let userCensusInputJson = ArrData.HJ_ADDRESS // 户籍地址详情
+      let userFamilyJson = ArrData.JT_PROVINCE + '' + ArrData.JT_CITY + '' + ArrData.JT_AREA // 家庭地址
+      let userFamilyInputJson = ArrData.JT_ADDRESS // 家庭住址详情
+      let userNowJson = ArrData.XZ_PROVINCE + '' + ArrData.XZ_CITY + '' + ArrData.XZ_AREA // 现地址
+      let userNowInputJson = ArrData.XZ_ADDRESS // 现地址详情
+
+      let UserHomeTownJsonArr = [] // 籍贯
+      UserHomeTownJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.JG_PROVINCE)
+      UserHomeTownJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.JG_PROVINCE, ArrData.JG_CITY)
+      UserHomeTownJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.JG_PROVINCE, ArrData.JG_CITY, ArrData.JG_AREA)
+      let UserBornPlaceJsonArr = [] // 出生地点数组
+      UserBornPlaceJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.BIRTH_PROVINCE)
+      UserBornPlaceJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.BIRTH_PROVINCE, ArrData.BIRTH_CITY)
+      UserBornPlaceJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.BIRTH_PROVINCE, ArrData.BIRTH_CITY, ArrData.BIRTH_AREA)
+      let userCensusJsonArr = [] // 户籍数组
+      userCensusJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.HJ_PROVINCE)
+      userCensusJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.HJ_PROVINCE, ArrData.HJ_CITY)
+      userCensusJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.HJ_PROVINCE, ArrData.HJ_CITY, ArrData.HJ_AREA)
+      let userFamilyJsonArr = [] // 家庭住址数组
+      userFamilyJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.JT_PROVINCE)
+      userFamilyJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.JT_PROVINCE, ArrData.JT_CITY)
+      userFamilyJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.JT_PROVINCE, ArrData.JT_CITY, ArrData.JT_AREA)
+      let userNowJsonArr = [] // 现住址
+      userNowJsonArr[0] = ValueList.getProvinceId(AreaListData, ArrData.XZ_PROVINCE)
+      userNowJsonArr[1] = ValueList.getCityId(AreaListData, ArrData.XZ_PROVINCE, ArrData.XZ_CITY)
+      userNowJsonArr[2] = ValueList.getAreaId(AreaListData, ArrData.XZ_PROVINCE, ArrData.XZ_CITY, ArrData.XZ_AREA)
+      // 国籍
+      if (ArrData.COUNTRY === 'CHN') {
+        usercountry = '中国'
+      }
+      // 赋值个人信息 数组对象
+      let msgjson = {
+        Name: Name,
+        ContainerName: usercountry,
+        IDType: IDTypeJson,
+        ID: userIdNumber,
+        SexValue: SexValueJson,
+        Race: userRace,
+        HomeTownPlace: UserHomeTownJson,
+        BornTime: UserBornJson,
+        Political: UserPoliticalJson,
+        Height: UserHeightJson,
+        Blood: UserBloodJson,
+        Religion: UserReligionJson,
+        Specialty: UserSpecialtyJson,
+        Marriage: UserMarriageJson,
+        Account: UserAccountJson,
+        Only_child: UserOnlyChildJson,
+        Birthplace: UserBornPlaceJson,
+        Accountplace: userCensusJson,
+        Accountplaceinput: userCensusInputJson,
+        FamilyPlace: userFamilyJson,
+        FamilyPlaceinput: userFamilyInputJson,
+        NowPlace: userNowJson,
+        NowPlaceinput: userNowInputJson,
+        MsgState: false,
+        user_IdTypeValuecode_set: userIdTypeCodeJson,
+        User_Racecode_set: userRacecode,
+        SexValuecode_set: SexValueCodeJson,
+        user_Politicalcode_set: UserPoliticalCodeJson,
+        user_Bloodcode_set: UserBloodCodeJson,
+        user_Religioncode_set: UserReligionCodeJson,
+        user_Marriagecode_set: UserMarriageCodeJson,
+        user_Accountcode_set: UserAccountCodeJson,
+        user_childcode_set: UserOnlyChildCodeJson,
+        HomeTownPlaceArr: UserHomeTownJsonArr,
+        BirthplaceArr: UserBornPlaceJsonArr,
+        AccountplaceArr: userCensusJsonArr,
+        FamilyPlaceArr: userFamilyJsonArr,
+        NowPlaceArr: userNowJsonArr
+      }
+      console.log(UserHomeTownJsonArr)
+      console.log(UserBornPlaceJsonArr)
+      console.log(userCensusJsonArr)
+      console.log(userFamilyJsonArr)
+      console.log(userNowJsonArr)
+      this.$store.commit('UserReplaceMsg', msgjson)
+      // 历史工作经历
+      this.GetDataToJob(ArrData.WORK_EXP)
+      // 教育背景
+      this.GetDataTeach(ArrData.EDUCATION)
+      // 外语水平
+      this.GetDataLang(ArrData.LANGUAGE)
+      // 家庭成员
+      this.GetDataFamily(ArrData.FAMILY)
+      // 健康信息
+      this.GetDataHealth(ArrData.HEALTH)
+      // 在伊利亲属关系
+      this.GetDataYiLi(ArrData.FAMINYILI)
+    },
+    GetDataToJob (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          StartTime: item.START_DT,
+          EndTime: item.END_DT,
+          unit: item.COMPANY,
+          office: item.POSITION,
+          witness: item.WITNESS,
+          witness_phone: item.PHONE,
+          Remarks: item.COMMENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('jobReplaceMsg', arr)
+    },
+    GetDataTeach (data) {
+      console.log('获取教育背景')
+      console.log(data)
+      let arr = []
+      data.forEach(function (item, index) {
+        let SchoolType = ValueList.GetSchoolType(item.GC_SCH_TYPE)
+        let EducationType = ValueList.GetEducation(item.CG_EDU_BCKG)
+        let ProfessionTypeList = ValueList.GetProfessionType(item.GC_MAJ_TYPE)
+        let TeachType = ValueList.GetTeachType(item.CG_EDU_TYPE)
+        let addmsg = {
+          id: index + 1,
+          StartTime: item.START_DT,
+          EndTime: item.END_DT,
+          unit: item.C_SCHOOL, // 学校名称
+          unitType: SchoolType.name, // 学校类型
+          education: EducationType.name, // 学历类型
+          ProfessionType: ProfessionTypeList.name, // 专业类别
+          Profession: item.C_MAJOR, // 专业
+          TeachModus: TeachType.name, // 教育形式
+          CertificateNumber: item.CG_EDU_BCKG_NO, // 学历证书编号
+          DegreeNumber: item.CG_DEGREE_NO, // 学位证书编号
+          Remarks: item.COMMENT, // 备注
+          SecDegree: '', // 是否第二学位
+          educationcode_set: EducationType.code,
+          unitTypecode_set: SchoolType.code,
+          TeachModuscode_set: TeachType.code,
+          ProfessionTypecode_set: ProfessionTypeList.code,
+          SecDegreecode_set: ''
+        }
+        console.log('专业类别' + addmsg)
+        arr.push(addmsg)
+      })
+      this.$store.commit('TeachbgReplaceMsg', arr)
+    },
+    GetDataLang (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let lang = ValueList.GetLanguage(item.CG_LANGUAGE)
+        let level = ValueList.GetLangLevel(item.CG_LANGUAGE, item.GC_CERTIFICATE_LVL)
+        let skill = ValueList.GetSkill(item.GC_LANG_SKILEXP)
+        let addmsg = {
+          id: index + 1,
+          language: lang.name,
+          level: level.name,
+          date: item.UPDATE_DT,
+          Grade: item.GC_SCORE,
+          skilled: skill.name,
+          languagecode_set: lang.code,
+          levelcode_set: level.code,
+          skilledcode_set: skill.code
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('languageReplaceMsg', arr)
+    },
+    GetDataHealth (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          starttime: item.GC_HEALTH_EFFDT,
+          endtime: item.GC_HEALTH_ENDDT,
+          unit: item.COMPANY_DESCR,
+          marker: item.COMMENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('HealthReplaceMsg', arr)
+    },
+    GetDataYiLi (data) {
+      let arr = []
+      data.forEach(function (item, index) {
+        let addmsg = {
+          id: index + 1,
+          name: item.NAME,
+          relation: item.YL_RELATION,
+          phone: item.PHONE,
+          unit: item.GC_SCH_COM,
+          office: item.GC_POSN_IDENT
+        }
+        arr.push(addmsg)
+      })
+      this.$store.commit('yiliReplaceMsg', arr)
+    },
+    GetDataFamily (data) {
+      let arr = []
+      let AreaListData = this.$store.state.CityList
+      data.forEach(function (item, index) {
+        let RelationType = ValueList.GetFamilylist(item.CG_RELATION_TYPE)
+        let SexType = ValueList.GetSexList(item.SEX)
+        let BooleanCrash = ValueList.GetNoList(item.CG_EMERG_CNTCT)
+        let Booleanyilijob = ValueList.GetNoList(item.CG_EMERG_CNTCT)
+        let cityDataArr = []
+        cityDataArr[0] = ValueList.getProvinceId(AreaListData, item.ADDR_PROVINCE)
+        cityDataArr[1] = ValueList.getCityId(AreaListData, item.ADDR_PROVINCE, item.ADDR_CITY)
+        cityDataArr[2] = ValueList.getAreaId(AreaListData, item.ADDR_PROVINCE, item.ADDR_CITY, item.ADDR_AREA)
+
+        let addmsg = {
+          id: index + 1,
+          relation: RelationType.name,
+          name: item.NAME,
+          sex: SexType.name,
+          BirthdayDate: item.BIRTHDATE,
+          ContactPhone: item.PHONE, // 联系方式
+          unit: item.GC_SCH_COM, // 工作单位
+          Identity: item.GC_POSN_IDENT, // 职位/身份
+          address: item.ADDR_PROVINCE + '' + item.ADDR_CITY + '' + item.ADDR_AREA, // 省市区
+          inaddress: item.ADDR_ADDRESS, // 住址详情
+          urgent: BooleanCrash.name, // 是否紧急联系人
+          yilijob: Booleanyilijob.name, // 是否在伊利工作
+          StaffID: item.GC_FAMILYMEMBER_ID, // 员工ID
+          Remarks: item.COMMENT,
+          relationcode_set: RelationType.code,
+          sexcode_set: SexType.code,
+          crashcode_set: BooleanCrash.code,
+          yilijobcode_set: Booleanyilijob.code,
+          AddressArr: cityDataArr
+        }
+        console.log(addmsg.AddressArr)
+        arr.push(addmsg)
+      })
+      this.$store.commit('FamilyReplaceMsg', arr)
+    },
+    // 禁止填写
+    UserJsonError (data) {
+      let obj = {}
+      obj.DataMsg = data
+      obj.Incumbent = false
+      // this.DataMsg = data
+      // this.Incumbent = false
+      this.$emit('homeShowStaff', obj)
+      console.log('禁止填写')
+    },
+    // 入职材料补充
+    EntryJsonSuccess (data) {
+      let arrlist = []
+      data.forEach(function (item, index) {
+        let EntryDepict = ValueList.GetEntryText(item.REQUIRED, item.FILELIST[0].FILEPATH)
+        let obj = {}
+        obj.FILELIST = item.FILELIST
+        obj.FILE_DESCR = item.FILE_DESCR
+        obj.FILE_ID = item.FILE_ID
+        obj.REQUIRED = item.REQUIRED
+        obj.REQUIREDText = EntryDepict.REQUIREDText
+        obj.FeleSuc = EntryDepict.FeleSuc
+        arrlist.push(obj)
+      })
+      this.$store.commit('entryReplaceList', arrlist)
+      Indicator.close()
+    },
+    EntryJsonError (msg) {
+      console.log('获取入职材料失败')
+      Indicator.close()
+    },
+    // 第二次入职数据
+    UserSecondJsonSuccess (data) {
+      console.log('第二次获取数据')
+      let AreaListData = this.$store.state.CityList
+      let json = data.JsonData
+      let Wage = ValueList.GetPayList(json.PAY_PRD)
+      let STATEdes = ValueList.getProvinceName(AreaListData, json.STATE)
+      let CITYdes = ValueList.getCityName(AreaListData, json.STATE, json.CITY)
+      let address = STATEdes + '' + CITYdes
+      console.log(Wage)
+      let UserMsgJson = {
+        PAY_PRD: json.PAY_PRD,
+        PAY_PRDdes: Wage.name,
+        YSB_LOCATION: json.YSB_LOCATION,
+        YJTB_DT: json.YJTB_DT,
+        BRANCH_EC_CD: json.BRANCH_EC_CD,
+        BRANCH_EC_DESCR: json.BRANCH_EC_DESCR,
+        ACCOUNT_EC_ID: json.ACCOUNT_EC_ID,
+        STATE: json.STATE,
+        STATEdes: STATEdes,
+        CITY: json.CITY,
+        CITYdes: CITYdes,
+        address: address
+      }
+      let BankJson = {
+        branch_cd: json.BRANCH_EC_CD,
+        branch_descr: json.BRANCH_EC_DESCR
+      }
+      console.log(UserMsgJson)
+      this.$store.commit('SecondUserMsgReplace', UserMsgJson)
+      this.$store.commit('BankIdReplace', BankJson)
+
+      // console.log(UserMsgJson)
+    },
+    // 第二次获取附件
+    GetSecondEntrySuccess (data) {
+      let arrlist = []
+      let VuexMust = []
+      let Progess = []
+      data.JsonData.forEach(function (item, index) {
+        let EntryDepict = ValueList.GetEntryText(item.REQUIRED, item.FILELIST[0].FILEPATH)
+        let obj = {}
+        obj.FILELIST = item.FILELIST
+        obj.FILE_DESCR = item.FILE_DESCR
+        obj.FILE_ID = item.FILE_ID
+        obj.REQUIRED = item.REQUIRED
+        obj.REQUIREDText = EntryDepict.REQUIREDText
+        obj.FeleSuc = EntryDepict.FeleSuc
+        arrlist.push(obj)
+      })
+      this.$store.commit('SecondListMenuReplace', arrlist)
+      data.JsonData.forEach(function (item, index) {
+        if (item.REQUIRED === 'Y') {
+          VuexMust.push(item.FILE_ID)
+        }
+      })
+      data.JsonData.forEach(function (item, index) {
+        if (item.FILELIST[0].FILEPATH !== '') {
+          Progess.push(item.FILE_ID)
+        }
+      })
+      this.$store.commit('ProgressArrReplace', Progess)
+      this.$store.commit('SecondAnnexMustReplace', VuexMust)
+      Indicator.close()
+    }
+  },
+  mounted () {
+    this.getCityjson()
+  },
+  computed: {
+    ...mapState({
+      PersonalMsg: state => state.UserShowNow,
+      PersonalPht: state => state.UserPhtShow,
+      SecondInfoShow: state => state.SecondInfoShow
+    })
+  }
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.staff-menu
+  margin-top:.1rem
+  .staff-li
+   width:99%
+   float:right
+   height: $darkHeight
+   padding-top:.2rem
+   padding-bottom:.2rem
+   box-shadow: 2px 2px 2px rgba(0,0,0,0.349)
+   .staff-left
+     float:left
+     width:20%
+     height: $darkHeight
+     line-height: $darkHeight
+     .staff-imgcontent
+      width:.9rem
+      height:.9rem
+      line-height:.9rem
+      background:rgb(28,170,254)
+      border-radius:50%
+      margin-top:.1rem
+      margin-left:auto
+      margin-right:auto
+      .staff-label
+       padding-left:.15rem
+       color:#fff
+       font-size:.6rem
+    .staff-title
+      width:60%
+      height: $darkHeight
+      line-height: $darkHeight
+      text-align:center
+      float:left
+      color:#000000
+      font-size:.35rem
+    .staff-right
+      width:18%
+      height: $darkHeight
+      line-height: $darkHeight
+      float:right
+      .staff-collection
+       float:right
+       margin-right:.3rem
+       color:#999999
+       font-size:.5rem
+</style>
