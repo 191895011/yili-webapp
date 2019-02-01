@@ -302,10 +302,6 @@ const RaceList = [
     'name': '外国血统'
   },
   {
-    'code': '91',
-    'name': '其他族'
-  },
-  {
     'code': '98',
     'name': '外国民族'
   }
@@ -1374,3 +1370,4 @@ export default {
   GetEntryText,
   GetPayList
 }
+

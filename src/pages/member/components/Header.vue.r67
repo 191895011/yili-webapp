@@ -1,0 +1,422 @@
+<template>
+<div>
+  <div class="Member-nav">
+   <router-link to="/">
+     <div class="Member-back">
+        <span class="iconfont ">&#xe602;</span>
+     </div>
+   </router-link>
+   <div class="Member-collection">
+       <h4 class="Member-msgtitle">{{MemberTitle.title}}</h4>
+   </div>
+   <div class="Member-refer" @click="user_checksubmit">
+      <h4 class="Member-submit" >{{MemberTitle.refer}}</h4>
+   </div>
+ </div>
+</div>
+</template>
+<script>
+import {MessageBox, Indicator} from 'mint-ui'
+import ValueList from '@/assets/js/valuelist'
+
+export default {
+  name: 'UploadHeader',
+  data () {
+    return {
+      MemberTitle: {
+        back: '',
+        title: '员工信息采集',
+        refer: '提交'
+      },
+      popupVisible: false
+    }
+  },
+  methods: {
+    user_checksubmit () {
+      // 家庭成员数据
+      let list = this.$store.state.family.FamilyList
+      // 婚姻状况
+      let userMarriage = this.$store.state.usermsglist.msgdatalist[0].Marriage
+      // 已婚 配偶信息
+      let wifemsg = []
+      // 父母同性 配偶同性 紧急联系人
+      let arrlist = []
+      // 非独生子女 同辈家庭成员
+      let brotherlist = []
+      // 紧急联系人
+      let crashlist = []
+      // 教育背景数据
+      let teachlength = this.$store.state.Teachbg.TeachbgdataList.length
+      // 家庭成员数据长度
+      let familylength = this.$store.state.family.FamilyList.length
+      // 是否独生子女
+      let userone = this.$store.state.usermsglist.msgdatalist[0].Only_child
+      if (!this.$store.state.usermsglist.msgdatalist[0].MsgState) {
+        MessageBox('提交信息失败', '请保存基本信息')
+        return
+      }
+      if (teachlength === 0) {
+        MessageBox('提交信息失败', '请保存教育背景')
+        return
+      }
+      if (familylength === 0) {
+        MessageBox('提交信息失败', '请保存家庭成员信息')
+        return
+      }
+      list.forEach(function (item) {
+        if (item.relation === '父/母') {
+          arrlist.push(item.sex)
+        }
+      })
+      if (arrlist.length !== 0) {
+        let s = arrlist.join(',') + ','
+        for (var i = 0; i < arrlist.length; i++) {
+          if (s.replace(arrlist[i] + ',', '').indexOf(arrlist[i] + ',') > -1) {
+            MessageBox('提交信息失败', '父母性别不能相同')
+            return
+          }
+        }
+      }
+      list.forEach(function (item) {
+        if (item.relation === '兄/嫂' && item.sex === '男') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '弟/弟媳' && item.sex === '男') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '姐/姐夫' && item.sex === '女') {
+          brotherlist.push(item.name)
+        } else if (item.relation === '妹/妹夫' && item.sex === '女') {
+          brotherlist.push(item.name)
+        }
+      })
+      if (userone === '否') {
+        if (brotherlist.length === 0) {
+          MessageBox('提交信息失败', '家庭成员必须填写一名兄、弟、姐、妹')
+          return false
+        }
+      } else if (userone === '是') {
+        if (brotherlist.length !== 0) {
+          MessageBox('提交信息失败', '您是独生子女,家庭成员信息错误')
+          return false
+        }
+      }
+      list.forEach(function (item) {
+        if (item.ContactPhone !== '') {
+          crashlist.push(item.ContactPhone)
+        }
+      })
+      if (crashlist.length === 0) {
+        MessageBox('提交信息失败', '家庭成员必须有一名紧急联系人')
+        return false
+      }
+      list.forEach(function (item) {
+        if (item.relation === '配偶') {
+          wifemsg.push(item.ContactPhone)
+        }
+      })
+      if (userMarriage !== '已婚' && wifemsg.length > 0) {
+        MessageBox('提交信息失败', '未婚,家庭成员不应有配偶信息')
+        return false
+      }
+      if (userMarriage === '已婚' && wifemsg.length === 0) {
+        MessageBox('提交信息失败', '家庭成员必须有配偶信息')
+        return false
+      }
+      // MessageBox('提交信息成功', '个人资料信息提交成功')
+      this.DataToArr()
+    },
+    DataToArr () {
+      // 个人信息
+      let UserMsgVuex = this.$store.state.usermsglist.msgdatalist[0]
+      console.log('籍贯省' + UserMsgVuex.HomeTownPlaceArr[0])
+      console.log('出生省' + UserMsgVuex.BirthplaceArr[0])
+      let UserMsg = {
+        NAME: UserMsgVuex.Name,
+        COUNTRY: 'CHN',
+        NID_TYPE: UserMsgVuex.user_IdTypeValuecode_set,
+        NID: UserMsgVuex.ID,
+        SEX: UserMsgVuex.SexValuecode_set,
+        ETHNIC_GRP_CD: UserMsgVuex.User_Racecode_set,
+        JG_PROVINCE: UserMsgVuex.HomeTownPlaceArr[0], // 籍贯省
+        JG_CITY: UserMsgVuex.HomeTownPlaceArr[1], // 籍贯市
+        JG_AREA: UserMsgVuex.HomeTownPlaceArr[2], // 籍贯区
+        BIRTHDATE: UserMsgVuex.BornTime,
+        POLITICAL_STA_CHN: UserMsgVuex.user_Politicalcode_set, // 政治面貌
+        PERS_HEIGHT: UserMsgVuex.Height,
+        BLOOD: UserMsgVuex.user_Bloodcode_set,
+        RELIGION: UserMsgVuex.user_Religioncode_set,
+        HOBBY: '',
+        SPECIALITY: UserMsgVuex.Specialty,
+        MAR_STATUS: UserMsgVuex.user_Marriagecode_set,
+        HUKOU_TYPE_CHN: UserMsgVuex.user_Accountcode_set,
+        C_BEAR: UserMsgVuex.user_childcode_set,
+        BIRTH_PROVINCE: UserMsgVuex.BirthplaceArr[0], // 出生地点 省
+        BIRTH_CITY: UserMsgVuex.BirthplaceArr[1],
+        BIRTH_AREA: UserMsgVuex.BirthplaceArr[2],
+        HJ_PROVINCE: UserMsgVuex.AccountplaceArr[0], // 户籍 省
+        HJ_CITY: UserMsgVuex.AccountplaceArr[1],
+        HJ_AREA: UserMsgVuex.AccountplaceArr[2],
+        HJ_ADDRESS: UserMsgVuex.Accountplaceinput,
+        JT_PROVINCE: UserMsgVuex.FamilyPlaceArr[0], // 家庭住址 省
+        JT_CITY: UserMsgVuex.FamilyPlaceArr[1],
+        JT_AREA: UserMsgVuex.FamilyPlaceArr[2],
+        JT_ADDRESS: UserMsgVuex.FamilyPlaceinput,
+        XZ_PROVINCE: UserMsgVuex.NowPlaceArr[0], // 现住址 省
+        XZ_CITY: UserMsgVuex.NowPlaceArr[1],
+        XZ_AREA: UserMsgVuex.NowPlaceArr[2],
+        XZ_ADDRESS: UserMsgVuex.NowPlaceinput
+      }
+      // 工作经历
+      let UserJobVuex = this.$store.state.jobskill.jobdataList
+      let WORK_EXP = []
+      UserJobVuex.forEach(function (item, index) {
+        let obj = {}
+        obj.START_DT = item.StartTime
+        obj.END_DT = item.EndTime
+        obj.COMPANY = item.unit
+        obj.POSITION = item.office
+        obj.WITNESS = item.witness
+        obj.PHONE = item.witness_phone
+        obj.COMMENT = item.Remarks
+        WORK_EXP.push(obj)
+      })
+      // 教育背景
+      let UserTeachVuex = this.$store.state.Teachbg.TeachbgdataList
+      let UserTeachSort = sortByKey(UserTeachVuex, 'educationcode_set')
+      let EducationBoolean = true
+      let EDUCATION = []
+      UserTeachSort.forEach(function (item, index) {
+        let obj = {}
+        obj.CG_HIGHEST_EDU = ''
+        obj.CG_PRI_EDU = ''
+        if (index === 0) {
+          obj.CG_HIGHEST_EDU = 'Y'
+        }
+        if (item.TeachModuscode_set === '1' && EducationBoolean) {
+          console.log('第一学历')
+          obj.CG_PRI_EDU = 'Y'
+          EducationBoolean = false
+        }
+        if (item.TeachModuscode_set === '10') {
+          console.log('字符串')
+        }
+        console.log(item.TeachModuscode_set)
+        if (item.TeachModuscode_set === 10) {
+          console.log('数组全等')
+        }
+        if (item.TeachModuscode_set === '10' && EducationBoolean) {
+          console.log('第一学历')
+          obj.CG_PRI_EDU = 'Y'
+          EducationBoolean = false
+        }
+        obj.YL_SECOND_MAJOR = item.SecDegreecode_set // 第二学位
+        obj.COMMENT = item.Remarks
+        obj.START_DT = item.StartTime
+        obj.END_DT = item.EndTime
+        obj.CG_EDU_BCKG = item.educationcode_set // 学历
+        obj.CG_DEGREE = '' // 学位
+        obj.C_SCHOOL = item.unit // 学校
+        obj.GC_SCH_TYPE = item.unitTypecode_set
+        obj.C_MAJOR = item.Profession // 专业
+        obj.GC_MAJ_TYPE = item.ProfessionTypecode_set // 专业类别
+        obj.CG_EDU_TYPE = item.TeachModuscode_set // 教育形式
+        obj.CG_EDU_BCKG_NO = item.CertificateNumber // 学历证书编号
+        obj.CG_DEGREE_NO = item.DegreeNumber // 学位证书编号
+        EDUCATION.push(obj)
+      })
+      // 外语水平
+      let UserLangVuex = this.$store.state.language.languagedatalist
+      let LANGUAGE = []
+      UserLangVuex.forEach(function (item, index) {
+        let obj = {}
+        obj.CG_LANGUAGE = item.languagecode_set
+        obj.GC_CERTIFICATE_LVL = item.levelcode_set
+        obj.UPDATE_DT = item.date
+        obj.GC_SCORE = item.Grade
+        obj.GC_LANG_SKILEXP = item.skilledcode_set
+        LANGUAGE.push(obj)
+      })
+      // 家庭成员
+      let UserFamilyVuex = this.$store.state.family.FamilyList
+      let FAMILY = []
+      UserFamilyVuex.forEach(function (item, index) {
+        let obj = {}
+        obj.CG_RELATION_TYPE = item.relationcode_set
+        obj.NAME = item.name
+        obj.SEX = item.sexcode_set
+        obj.BIRTHDATE = item.BirthdayDate
+        obj.PHONE = item.ContactPhone
+        obj.GC_SCH_COM = item.unit
+        obj.GC_POSN_IDENT = item.Identity
+        obj.ADDR_PROVINCE = item.AddressArr[0]
+        obj.ADDR_CITY = item.AddressArr[1]
+        obj.ADDR_AREA = item.AddressArr[2]
+        obj.ADDR_ADDRESS = item.inaddress
+        obj.CG_EMERG_CNTCT = item.crashcode_set
+        obj.GC_ISWORK_YILI = item.yilijobcode_set
+        obj.GC_ISWORK_SPOUSE = ''
+        obj.GC_FAMILYMEMBER_ID = item.StaffID
+        obj.COMMENT = ''
+        FAMILY.push(obj)
+      })
+      // 健康信息
+      let UserHealthVuex = this.$store.state.health.HealthList
+      let HEALTH = []
+      UserHealthVuex.forEach(function (item, index) {
+        let obj = {}
+        obj.GC_HEALTH_EFFDT = item.starttime
+        obj.GC_HEALTH_ENDDT = item.endtime
+        obj.COMPANY_DESCR = item.unit
+        obj.COMMENT = item.marker
+        HEALTH.push(obj)
+      })
+      // 伊利亲属关系
+      let UserYiliJobVuex = this.$store.state.yilijobdatalist.yilijobdatalist
+      let FAMINYILI = []
+      UserYiliJobVuex.forEach(function (item, index) {
+        let obj = {}
+        obj.NAME = item.name
+        obj.YL_RELATION = item.relation
+        obj.PHONE = item.phone
+        obj.GC_SCH_COM = item.unit
+        obj.GC_POSN_IDENT = item.office
+        FAMINYILI.push(obj)
+      })
+      // 提交数据
+      this.UsermsgSubmit(UserMsg, WORK_EXP, EDUCATION, LANGUAGE, FAMILY, HEALTH, FAMINYILI)
+    },
+    UsermsgSubmit (UserMsg, WORK_EXP, EDUCATION, LANGUAGE, FAMILY, HEALTH, FAMINYILI) {
+      console.log('个人信息')
+      console.log(UserMsg)
+      Indicator.open('提交中...')
+      let that = this
+      let userId = this.$store.state.UserIdArr.hireId
+      this.axios.post(ValueList.HttpArr + '/PSIGW/RESTListeningConnector/PSFT_HR/SaveData.v1/', {
+        data: {
+          'TOKEN': 'hrssc.yili.com',
+          'hireId': userId,
+          'type': '1',
+          'NAME': UserMsg.NAME,
+          'COUNTRY': UserMsg.COUNTRY,
+          'NID_TYPE': UserMsg.NID_TYPE,
+          'NID': UserMsg.NID,
+          'SEX': UserMsg.SEX,
+          'ETHNIC_GRP_CD': UserMsg.ETHNIC_GRP_CD,
+          'JG_PROVINCE': UserMsg.JG_PROVINCE,
+          'JG_CITY': UserMsg.JG_CITY,
+          'JG_AREA': UserMsg.JG_AREA,
+          'BIRTHDATE': UserMsg.BIRTHDATE,
+          'POLITICAL_STA_CHN': UserMsg.POLITICAL_STA_CHN,
+          'PERS_HEIGHT': UserMsg.PERS_HEIGHT,
+          'BLOOD': UserMsg.BLOOD,
+          'RELIGION': UserMsg.RELIGION,
+          'HOBBY': UserMsg.HOBBY,
+          'SPECIALITY': UserMsg.SPECIALITY,
+          'MAR_STATUS': UserMsg.MAR_STATUS,
+          'HUKOU_TYPE_CHN': UserMsg.HUKOU_TYPE_CHN,
+          'C_BEAR': UserMsg.C_BEAR,
+          'BIRTH_PROVINCE': UserMsg.BIRTH_PROVINCE,
+          'BIRTH_CITY': UserMsg.BIRTH_CITY,
+          'BIRTH_AREA': UserMsg.BIRTH_AREA,
+          'HJ_PROVINCE': UserMsg.HJ_PROVINCE,
+          'HJ_CITY': UserMsg.HJ_CITY,
+          'HJ_AREA': UserMsg.HJ_AREA,
+          'HJ_ADDRESS': UserMsg.HJ_ADDRESS,
+          'JT_PROVINCE': UserMsg.JT_PROVINCE,
+          'JT_CITY': UserMsg.JT_CITY,
+          'JT_AREA': UserMsg.JT_AREA,
+          'JT_ADDRESS': UserMsg.JT_ADDRESS,
+          'XZ_PROVINCE': UserMsg.XZ_PROVINCE,
+          'XZ_CITY': UserMsg.XZ_CITY,
+          'XZ_AREA': UserMsg.XZ_AREA,
+          'XZ_ADDRESS': UserMsg.XZ_ADDRESS,
+          'WORK_EXP': WORK_EXP,
+          'EDUCATION': EDUCATION,
+          'LANGUAGE': LANGUAGE,
+          'FAMILY': FAMILY,
+          'HEALTH': HEALTH,
+          'FAMINYILI': FAMINYILI
+        }
+      })
+        .then(function (response) {
+          Indicator.close()
+          console.log(response)
+          let res = response.data
+          console.log('返回结果')
+          that.SubmitToHome(res)
+        })
+        .catch(function (error) {
+          console.log(error)
+          Indicator.close()
+          MessageBox('操作失败', '提交员工信息失败')
+        })
+    },
+    SubmitToHome (res) {
+      if (res.status === '0') {
+        console.log('个人资料提交成功')
+        MessageBox('操作成功', '提交员工信息成功')
+        this.$store.commit('ChangePersonalShow', false)
+        this.$router.push({
+          path: `/`
+        })
+      } else {
+        console.log('个人资料提交失败')
+        MessageBox('操作失败', '提交员工信息失败')
+      }
+    }
+  }
+}
+function sortByKey (array, key) {
+  return array.sort(function (a, b) {
+    var x = a[key]
+    var y = b[key]
+    console.log(x, y)
+    return ((x < y) ? -1 : ((x > y) ? 1 : 0))
+  })
+}
+</script>
+
+<style lang="stylus" scoped>
+@import '~@/assets/styles/varibles.styl'
+.Member-nav
+  width:100%
+  height:$darkHeight
+  tex-align:center
+  .Member-back
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    padding-left:.4rem
+    font-size:.3rem
+    color:#333
+  .Member-collection
+    box-sizing: border-box
+    float:left
+    width:60%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-msgtitle
+      font-weight:bold
+      font-size:.4rem
+      color:#666
+      text-align:center
+   .Member-refer
+    box-sizing: border-box
+    float:left
+    width:20%
+    height:$darkHeight
+    line-height:$darkHeight
+    .Member-submit
+      font-weight:400
+      font-size:.4rem
+      color:#CC3300
+      text-align:center
+.Stuff-Id
+  box-sizing:box-sizing
+  padding-left:.4rem
+  padding-right:.4rem
+  .stuff-idht
+    height:.4rem
+    line-height:.4rem
+</style>

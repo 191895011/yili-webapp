@@ -1,0 +1,7 @@
+/build/
+/config/
+/dist/
+/src/pages/upload/
+/src/pages/entry/
+/src/pages/second/components/upload/
+/*.js
